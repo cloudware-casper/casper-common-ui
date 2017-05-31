@@ -1,0 +1,80 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+<!--
+`casper-login`
+
+
+@demo demo/index.html 
+-->
+<dom-module id="casper-job-status">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-family: 'Roboto', 'Noto', sans-serif;
+        margin: 0px;
+      }
+
+      paper-progress {
+        display: block;
+        width: 100%;
+        margin: 20px 0;
+      }
+
+      paper-progress.slow {
+        --paper-progress-indeterminate-cycle-duration: 5s;
+      }
+
+      paper-progress.blue {
+        --paper-progress-active-color: var(--paper-light-blue-500);
+        --paper-progress-secondary-color: var(--paper-light-blue-100);
+      }
+
+      paper-progress.red {
+        --paper-progress-active-color: var(--paper-red-500);
+        --paper-progress-secondary-color: var(--paper-red-100);
+      }
+
+      paper-button {
+        font-weight: normal;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
+        background-color: #101010; 
+        color: white;
+        margin: 0px;
+      }
+
+      #panel {
+        width: 300px;
+      }
+
+      div.header {
+        width: 300px;
+        height: 30px;
+        background-color: black;
+        color: white;
+        margin: 0px;
+      }
+
+    </style>
+    <paper-dialog opened modal>
+      <div class="header">
+        Header for my title
+      </div>
+      <div id="panel">
+        <paper-progress indeterminate class="slow red"></paper-progress>
+        <span>Valid until xxx</span>
+        <paper-button>Download</paper-button>
+      </div>
+    </paper-dialog>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'casper-job-status'
+    });
+  </script>
+</dom-module>

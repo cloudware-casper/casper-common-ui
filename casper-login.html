@@ -1,0 +1,81 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+
+<!--
+`casper-login`
+
+
+@demo demo/index.html 
+-->
+<dom-module id="casper-login">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      paper-button {
+        font-family: 'Roboto', 'Noto', sans-serif;
+        font-weight: normal;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
+        background-color: #101010; 
+        color: white;
+        margin: 0px;
+      }
+
+      #panel {
+        width: 300px;
+      }
+
+      #login-panel {
+        margin: 0px;
+        margin-top: 6px;
+      }
+    </style>
+    <iron-ajax id="xhr" url="[[url]]" method="POST" content-type="application/json" handle-as="json" on-response="signInResponse"></iron-ajax>
+    <paper-dialog opened modal>
+      <div id="panel">
+        <paper-input id="email" label="email"></paper-input>
+        <paper-input id="password" type="password" label="password"></paper-input>
+        <div>
+          <paper-checkbox></paper-checkbox><span>Remember me</span>
+        </div>
+        <div id="login-panel"> 
+          <paper-button on-click="signIn" raised>login</paper-button><span>Forgot password</span>
+        </div>
+    </paper-dialog>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'casper-login',
+      properties: {
+        url: {
+          type: String
+        },
+        _loginParams: {
+          type: Object,
+          value: null
+        }
+      },  
+
+      signIn: function () {
+        this._loginParams = { email: this.$.email.value, password: this.$.password.value };
+        this.$.xhr.body = JSON.stringify(this._loginParams);
+        this.$.xhr.generateRequest();
+      },
+
+      signInResponse: function () {
+        var response = this.$.xhr.lastResponse;
+        window.localStorage.setItem('Casper-Session', response.casper_session);
+        window.location.href = response.impersonate_url;
+      }
+    });
+  </script>
+</dom-module>
