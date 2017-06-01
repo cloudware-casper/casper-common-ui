@@ -1,3 +1,23 @@
+<!--
+  - Copyright (c) 2014-2016 Neto Ranito & Seabra LDA. All rights reserved.
+  -
+  - This file is part of casper-common-ui.
+  -
+  - casper-common-ui is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU Affero General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - casper-common-ui  is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU Affero General Public License
+  - along with casper-common-ui.  If not, see <http://www.gnu.org/licenses/>.
+  -
+ -->
+
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../paper-button/paper-button.html">
@@ -74,7 +94,34 @@
 
   <script>
     Polymer({
-      is: 'casper-job-status'
+      is: 'casper-job-status',
+
+      properties: {
+        casperSocket: {
+          type: Object
+        }
+      },
+
+      ready: function () {
+
+        // Auto attached to one casper websockt if none was provided
+        if ( this.socket === undefined ) {
+          this.casperSocket = document.getElementsByTagName('casper-socket')[0];
+          this.casperSocket.client = this;
+        }
+      },
+
+      onSocketMessage: function (message) {
+
+      },
+      
+      onSocketOpen: function (message) {
+
+      },
+
+      onSocketClose: function (message) {
+
+      }
     });
   </script>
 </dom-module>
