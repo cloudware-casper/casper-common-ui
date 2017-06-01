@@ -23,6 +23,9 @@
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../app-localize-behavior/app-localize-behavior.html">
+
 <!--
 `casper-login`
 
@@ -41,7 +44,8 @@
       paper-progress {
         display: block;
         width: 100%;
-        margin: 20px 0;
+        margin-top: 5px;
+        margin-bottom:  20px;
       }
 
       paper-progress.slow {
@@ -64,7 +68,8 @@
         -webkit-font-smoothing: antialiased;
         background-color: #101010; 
         color: white;
-        margin: 0px;
+        marginRight: 0px;
+        marginBottom: 0px;
       }
 
       #panel {
@@ -72,23 +77,25 @@
       }
 
       div.header {
-        width: 300px;
-        height: 30px;
+        height: 30pt;
+        display: flex;
+        align-items: center;
+        justify-content: center; 
         background-color: black;
         color: white;
         margin: 0px;
       }
 
+
     </style>
     <paper-dialog opened modal>
-      <div class="header">
-        Header for my title
-      </div>
+      <div class="header">{{localize('hello', 'name', 'Batman')}}</div>
       <div id="panel">
-        <paper-progress indeterminate class="slow red"></paper-progress>
+        <span>Waiting for queue</span>
+        <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
       </div>
-      <span>Valid until yyyy-mm-dd</span>
-      <paper-button>Download</paper-button>
+      <paper-checkbox>Print</paper-checkbox>
+      <paper-button disabled>{{localize('download')}}</paper-button>
     </paper-dialog>
   </template>
 
@@ -97,31 +104,74 @@
       is: 'casper-job-status',
 
       properties: {
-        casperSocket: {
+        socket: {
           type: Object
+        },
+        jobId: {
+          type: String
+        },
+        /* Overriden from AppLocalizeBehavior */
+        language: {
+          value: 'fr',
+          type: String
         }
       },
 
-      ready: function () {
+      behaviors: [
+        Polymer.AppLocalizeBehavior
+      ],
 
-        // Auto attached to one casper websockt if none was provided
-        if ( this.socket === undefined ) {
-          this.casperSocket = document.getElementsByTagName('casper-socket')[0];
-          this.casperSocket.client = this;
-        }
+      attached: function () {
+
+        this.loadResources(this.resolveUrl('locales.json'));
+
+        //console.log(this.localize('hello', 'name', 'Batman'));
+
+        // Auto attached to first casper-websocket in the page if none was provided
+        //if ( this.socket === undefined ) {
+        //  this.socket = document.getElementsByTagName('casper-socket')[0];
+        //  this.socket.client = this;
+        //  console.log("**** Warning socket auto-attached!!!!\n");
+        //}
+      },
+
+      onSocketOpen: function (message) {
+        this.socket.sendCommand('subscribe channel "'+this.jobId+'";');
       },
 
       onSocketMessage: function (message) {
+        try {
+          var msg = message.data;
+          if ( msg[0] === 'N' ) {
+            var notification = JSON.parse(msg.substring(msg.indexOf('{'), msg.length -1));
 
+            if ( notification.link !== undefined ) {
+              window.location.href = notification.link;
+            }
+            
+            if ( notification.progress !== undefined ) {
+              var progress = parseFloat(notification.progress);
+              if ( isNaN(progress) === false ) {
+                this.$.progress.indeterminate = false;
+                this.$.progress.value = progress;
+              }
+            }
+
+            if ( notification.name !== undefined ) {
+              console.log('name: '+notification.name);
+            }
+          }
+
+        } catch (exception) {
+          // All fucked ??? rollbar?
+
+        }
       },
       
-      onSocketOpen: function (message) {
-
-      },
-
       onSocketClose: function (message) {
 
       }
+
     });
   </script>
 </dom-module>

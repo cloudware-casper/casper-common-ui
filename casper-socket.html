@@ -49,6 +49,11 @@ websocket client for casper server
         /** Path or route that connects to casper-epaper module */
         path: {
           type: String
+        },
+        /** When true socket will connect on attachment */
+        autoConnect: {
+          type: Boolean,
+          value: false
         }
       },
 
@@ -68,7 +73,9 @@ websocket client for casper server
       },
 
       attached: function () {
-        this.connect(); // ?? auto or manual?
+        if ( this.autoConnect ) {
+          this.connect(); // ?? auto or manual?
+        }
       },
 
       detached: function () {
