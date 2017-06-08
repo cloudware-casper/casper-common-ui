@@ -127,6 +127,8 @@
 
         //console.log(this.localize('hello', 'name', 'Batman'));
 
+        // https://stackoverflow.com/questions/16239513/print-pdf-directly-from-javascript
+
         // Auto attached to first casper-websocket in the page if none was provided
         //if ( this.socket === undefined ) {
         //  this.socket = document.getElementsByTagName('casper-socket')[0];
@@ -143,11 +145,13 @@
         try {
           var msg = message.data;
           if ( msg[0] === 'N' ) {
-            var notification = JSON.parse(msg.substring(msg.indexOf('{'), msg.length -1));
+            var notification = JSON.parse(msg.substring(msg.indexOf('{'), msg.length - 1));
 
             if ( notification.link !== undefined ) {
               window.location.href = notification.link;
-            }
+              window.parent.document.getElementById('job_status').style.display = 'none';
+              socket.disconnect();
+            } 
             
             if ( notification.progress !== undefined ) {
               var progress = parseFloat(notification.progress);
