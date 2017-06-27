@@ -1,0 +1,259 @@
+<!--
+  - Copyright (c) 2014-2016 Neto Ranito & Seabra LDA. All rights reserved.
+  -
+  - This file is part of casper-common-ui.
+  -
+  - casper-common-ui is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU Affero General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - casper-common-ui  is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU Affero General Public License
+  - along with casper-common-ui.  If not, see <http://www.gnu.org/licenses/>.
+  -
+ -->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+<link rel="import" href="../casper-common-ui/casper-socket.html">
+<link rel="import" href="../vaadin-upload/vaadin-upload.html">
+<link rel="import" href="../app-localize-behavior/app-localize-behavior.html">
+
+<!--
+`casper-login`
+
+
+@demo demo/index.html 
+-->
+<dom-module id="casper-job-dialog">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-family: 'Roboto', 'Noto', sans-serif;
+      }
+
+      paper-progress {
+        display: block;
+        width: 100%;
+        margin-top: 5px;
+        margin-bottom:  20px;
+      }
+
+      paper-progress.slow {
+        --paper-progress-indeterminate-cycle-duration: 5s;
+      }
+
+      paper-progress.blue {
+        --paper-progress-active-color: var(--paper-light-blue-500);
+        --paper-progress-secondary-color: var(--paper-light-blue-100);
+      }
+
+      paper-progress.red {
+        --paper-progress-active-color: var(--paper-red-500);
+        --paper-progress-secondary-color: var(--paper-red-100);
+      }
+
+      paper-button {
+        font-weight: normal;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
+        background-color: #101010; 
+        color: white;
+        marginRight: 0px;
+        marginBottom: 0px;
+      }
+
+      .paper-dialog-0 > * {
+        padding: 0px;
+        margin: 0px;
+        width: 350px;
+        height: 250px;
+      }
+
+      #header {
+        background-color: black;
+        height: 30px;
+        color: white;
+        padding: 6px;
+        display: flex; 
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #status_panel, #upload_panel {
+        padding: 18px;
+      }
+
+      #upload {
+        height: 100%;
+      }
+
+      iron-icon {
+        fill: white;
+      }
+
+      iron-icon:hover {
+        fill: var(--primary-color);
+      }
+
+    </style>
+    <casper-socket id="self_socket"></casper-socket>
+    <paper-dialog id="dialog" opened modal>
+      <div>
+        <div id="header">
+          <h2>{{localize('hello', 'name', 'Batman')}}</h2>
+          <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
+           <paper-tooltip for="close">Close dialog</paper-tooltip>
+        </div>
+        <div id="status_panel">
+          <span>Waiting for queue</span>
+          <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
+          <paper-button disabled>{{localize('download')}}</paper-button>
+          <paper-button disabled>background</paper-button>
+        </div>
+        <div id="upload_panel">
+          <vaadin-upload id="upload"
+                         target="https://occ-cdn.cldware.com/upload" 
+                         method="POST"
+                         timeout="300000" 
+                         maxFiles="1"
+                         form-data-name="my-attachment">
+          </vaadin-upload>
+        </div> 
+      </div>
+    </paper-dialog>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'casper-job-dialog',
+
+      properties: {
+        socket: {
+          type: Object
+        },
+        jobId: {
+          type: String
+        },
+        iframe: {
+          type: Boolean,
+          value: false
+        },
+        /* Overriden from AppLocalizeBehavior */
+        language: {
+          value: 'fr',
+          type: String
+        }
+      },
+
+      behaviors: [
+        Polymer.AppLocalizeBehavior
+      ],
+
+
+      attached: function () {
+        if ( this.socket === undefined ) {
+          this.socket = this.$.self_socket;
+        }
+        this.socket.client = this;
+        this.loadResources(this.resolveUrl('locales.json'));
+
+        this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
+        this.listen(this.$.upload, 'upload-request', '_uploadRequest');
+
+        this.$.upload_panel.style.display = 'block';
+        this.$.status_panel.style.display = 'none';
+      },
+
+      detached: function () {
+        this.unlisten(this.$.upload, 'upload-request', '_uploadRequest');
+        this.unlisten(this.$.upload, 'upload-success', '_uploadSuccess');
+      },
+
+      setJob: function (job) {
+        this.job   = job;
+        this.jobId = job.tube + '/' + job.id;
+        if ( this.socket === this.$.self_socket ) {
+          this.socket.connect();
+        }
+      },
+
+      onSocketOpen: function (message) {
+        this.socket.sendCommand('subscribe channel "'+this.jobId+'";');
+      },
+
+      onSocketMessage: function (message) {
+        try {
+          var msg = message.data;
+          if ( msg[0] === 'N' ) {
+            var notification = JSON.parse(msg.substring(msg.indexOf('{'), msg.length - 1));
+
+            if ( notification.public_link !== undefined ) {
+              //window.location.href = notification.public_link;
+              if ( this.iframe ) {
+                this.job.iframe.style.display = 'none';
+              } else {
+                // TODO just hide dialog
+              }
+              //window.parent.document.getElementById('job_status').style.display = 'none';
+              socket.disconnect();
+            } 
+            
+            if ( notification.progress !== undefined ) {
+              var progress = parseFloat(notification.progress);
+              if ( isNaN(progress) === false ) {
+                this.$.progress.indeterminate = false;
+                this.$.progress.value = progress;
+              }
+            }
+
+            if ( notification.name !== undefined ) {
+              console.log('name: '+notification.name);
+            }
+          }
+
+        } catch (exception) {
+          // All fucked ??? rollbar?
+
+        }
+      },
+      
+      onSocketClose: function (message) {
+
+      },
+
+      _uploadRequest: function (event) {
+          event.preventDefault();
+          event.detail.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+          //event.detail.xhr.setRequestHeader('Content-Length', event.detail.file.size);
+          event.detail.xhr.setRequestHeader('Content-Disposition', 'form-data; name="'+event.detail.file.formDataName+'"; filename="'+event.detail.file.name+'";');
+          event.detail.xhr.send(event.detail.file);
+      },
+
+      _uploadSuccess: function (event) {
+        if ( event.detail.xhr.status == 200 ) {
+          this.$.upload_panel.style.display = 'none';
+          this.$.status_panel.style.display = 'block';
+          console.log(event.detail.xhr.responseText);
+        }
+      },
+
+      _closeDialog: function (event) {
+        this.$.dialog.close();
+      }
+
+    });
+  </script>
+</dom-module>

@@ -8,7 +8,9 @@
     "paper-button": "^2.0.0",
     "paper-input": "^2.0.0",
     "paper-checkbox": "^2.0.0",
-    "app-localize-behavior": "PolymerElements/app-localize-behavior#^2.0.0"
+    "app-localize-behavior": "PolymerElements/app-localize-behavior#^2.0.0",
+    "iron-icon": "^2.0.0",
+    "paper-tooltip": "^2.0.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
