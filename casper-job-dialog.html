@@ -21,6 +21,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-dropdown/iron-dropdown.html">
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../paper-button/paper-button.html">
@@ -46,7 +47,6 @@
 
       paper-progress {
         display: block;
-        width: 100%;
         margin-top: 5px;
         margin-bottom:  20px;
       }
@@ -78,8 +78,6 @@
       .paper-dialog-0 > * {
         padding: 0px;
         margin: 0px;
-        width: 350px;
-        height: 250px;
       }
 
       #header {
@@ -97,7 +95,8 @@
       }
 
       #upload {
-        height: 100%;
+        height: 250px;
+        width: 400px;
       }
 
       iron-icon {
@@ -105,30 +104,29 @@
       }
 
       iron-icon:hover {
-        fill: var(--primary-color);
+        background-color: var(--primary-color);
       }
 
     </style>
     <casper-socket id="self_socket"></casper-socket>
-    <paper-dialog id="dialog" opened modal>
+    <paper-tooltip for="close">Close dialog</paper-tooltip>
+    <paper-dialog id="dialog" width="[[width]]" height="[[height]]" opened model>
       <div>
         <div id="header">
           <h2>{{localize('hello', 'name', 'Batman')}}</h2>
           <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
-           <paper-tooltip for="close">Close dialog</paper-tooltip>
         </div>
         <div id="status_panel">
           <span>Waiting for queue</span>
           <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
-          <paper-button disabled>{{localize('download')}}</paper-button>
           <paper-button disabled>background</paper-button>
         </div>
         <div id="upload_panel">
           <vaadin-upload id="upload"
-                         target="https://occ-cdn.cldware.com/upload" 
+                         target="[[uploadUrl]]" 
                          method="POST"
                          timeout="300000" 
-                         maxFiles="1"
+                         max-files="1"
                          form-data-name="my-attachment">
           </vaadin-upload>
         </div> 
@@ -155,6 +153,10 @@
         language: {
           value: 'fr',
           type: String
+        },
+        uploadUrl: {
+          type: String,
+          value: "/upload"
         }
       },
 
@@ -175,6 +177,8 @@
 
         this.$.upload_panel.style.display = 'block';
         this.$.status_panel.style.display = 'none';
+        //this.$.dialog.fitInto = document.getElementsByTagName('body')[0];
+        //this.$.dialog.open();
       },
 
       detached: function () {
@@ -237,7 +241,6 @@
       _uploadRequest: function (event) {
           event.preventDefault();
           event.detail.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-          //event.detail.xhr.setRequestHeader('Content-Length', event.detail.file.size);
           event.detail.xhr.setRequestHeader('Content-Disposition', 'form-data; name="'+event.detail.file.formDataName+'"; filename="'+event.detail.file.name+'";');
           event.detail.xhr.send(event.detail.file);
       },

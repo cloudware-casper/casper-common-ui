@@ -3,19 +3,26 @@
   "main": "casper-login.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.9.1",
-    "paper-dialog": "^1.1.0",
     "paper-progress": "^2.0.0",
     "paper-button": "^2.0.0",
     "paper-input": "^2.0.0",
     "paper-checkbox": "^2.0.0",
     "app-localize-behavior": "PolymerElements/app-localize-behavior#^2.0.0",
     "iron-icon": "^2.0.0",
-    "paper-tooltip": "^2.0.0"
+    "paper-tooltip": "^2.0.0",
+    "vaadin-upload": "^1.1.4",
+    "iron-dropdown": "^2.0.0",
+    "paper-dialog": "^2.0.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
     "web-component-tester": "^4.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "resolutions": {
+    "paper-progress": "^2.0.0",
+    "paper-button": "^2.0.0",
+    "iron-icon": "^2.0.0"
   }
 }
