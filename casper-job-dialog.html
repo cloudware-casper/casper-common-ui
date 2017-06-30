@@ -195,7 +195,7 @@
       },
 
       onSocketOpen: function (message) {
-        this.socket.sendCommand('subscribe channel "'+this.jobId+'";');
+        this.socket.sendCommand('subscribe job "'+this.jobId+'";');
       },
 
       onSocketMessage: function (message) {
@@ -235,7 +235,7 @@
       },
       
       onSocketClose: function (message) {
-
+        // Close overlay and flash a message if unexpected
       },
 
       _uploadRequest: function (event) {
