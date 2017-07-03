@@ -175,8 +175,8 @@
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
-        this.$.upload_panel.style.display = 'block';
-        this.$.status_panel.style.display = 'none';
+        this.$.upload_panel.style.display = 'none';
+        this.$.status_panel.style.display = 'block';
         //this.$.dialog.fitInto = document.getElementsByTagName('body')[0];
         //this.$.dialog.open();
       },
@@ -200,34 +200,34 @@
 
       onSocketMessage: function (message) {
         try {
+          var notification;
           var msg = message.data;
-          if ( msg[0] === 'N' ) {
-            var notification = JSON.parse(msg.substring(msg.indexOf('{'), msg.length - 1));
 
-            if ( notification.public_link !== undefined ) {
-              //window.location.href = notification.public_link;
-              if ( this.iframe ) {
-                this.job.iframe.style.display = 'none';
-              } else {
-                // TODO just hide dialog
-              }
-              //window.parent.document.getElementById('job_status').style.display = 'none';
-              socket.disconnect();
-            } 
-            
-            if ( notification.progress !== undefined ) {
-              var progress = parseFloat(notification.progress);
-              if ( isNaN(progress) === false ) {
-                this.$.progress.indeterminate = false;
-                this.$.progress.value = progress;
-              }
-            }
+          switch ( msg[0] ) {
+            case 'N':
+              var head = 'N:subscription:message:'+this.jobId+':';
+              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
+                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
 
-            if ( notification.name !== undefined ) {
-              console.log('name: '+notification.name);
-            }
+                /* Martelada */
+                notification.status = 'in-progress';
+              }
+              break;
+            case 'S':
+              var head = 'S:ok:subscribe job:'+this.jobId+',';
+
+              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
+                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
+
+                /* Martelada */
+                notification.status = 'complete';
+              }
+              break;
           }
 
+          if ( notification !== undefined ) {
+            this._updateUI(notification);
+          }
         } catch (exception) {
           // All fucked ??? rollbar?
 
@@ -254,7 +254,47 @@
       },
 
       _closeDialog: function (event) {
+        if ( this.iframe && this.job.iframe ) {
+          this.job.iframe.style.display = 'none';
+        }
         this.$.dialog.close();
+      },
+
+      _handlePublicLink: function (notification) {
+
+        if ( notification.public_link !== undefined && notification.status !== 'error' ) {
+          console.log('*** got '+notification.status+' link:'+notification.public_link);
+              
+          if ( this.downloadIframe === undefined ) {
+            this.downloadIframe = document.createElement('iframe');
+            this.appendChild(this.downloadIframe);
+          }
+          this.downloadIframe.src = notification.public_link;
+          this._closeDialog();
+        } 
+      },
+
+      _updateUI: function (notification) {
+        switch (notification.status) {
+          case 'in-progress':
+            this._handlePublicLink(notification);
+
+            if ( notification.progress !== undefined ) {
+              var progress = parseFloat(notification.progress);
+              if ( isNaN(progress) === false ) {
+                this.$.progress.indeterminate = false;
+                this.$.progress.value = progress;
+              }
+            }
+            break;
+          case 'complete':
+            this._handlePublicLink(notification);
+            break;
+          case 'error':
+            break;
+          default:
+            break;
+        }
       }
 
     });
