@@ -21,9 +21,8 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
-<link rel="import" href="../iron-dropdown/iron-dropdown.html">
-<link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
@@ -33,8 +32,6 @@
 
 <!--
 `casper-login`
-
-
 @demo demo/index.html 
 -->
 <dom-module id="casper-job-dialog">
@@ -42,13 +39,13 @@
     <style>
       :host {
         display: block;
-        font-family: 'Roboto', 'Noto', sans-serif;
       }
 
       paper-progress {
         display: block;
         margin-top: 5px;
         margin-bottom:  20px;
+        width: 100%;
       }
 
       paper-progress.slow {
@@ -61,7 +58,7 @@
       }
 
       paper-progress.red {
-        --paper-progress-active-color: var(--paper-red-500);
+        --paper-progress-active-color: var(--primary-color);
         --paper-progress-secondary-color: var(--paper-red-100);
       }
 
@@ -71,8 +68,7 @@
         -webkit-font-smoothing: antialiased;
         background-color: #101010; 
         color: white;
-        marginRight: 0px;
-        marginBottom: 0px;
+        margin: 0px;
       }
 
       .paper-dialog-0 > * {
@@ -82,53 +78,81 @@
 
       #header {
         background-color: black;
-        height: 30px;
+        height: 42px;
         color: white;
-        padding: 6px;
+        padding: 0px;
         display: flex; 
         align-items: center;
         justify-content: space-between;
       }
 
-      #status_panel, #upload_panel {
-        padding: 18px;
+      .pager {
+        position:absolute;
+        display: block;
+        bottom:0;
+        top: 42px;
+        left:0;
+        right:0;
+      }
+
+      .page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: white;
+        margin: 12px;
       }
 
       #upload {
-        height: 250px;
-        width: 400px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
       }
 
-      iron-icon {
+      iron-icon, h2 {
         fill: white;
+        margin: 8px;
       }
 
       iron-icon:hover {
         background-color: var(--primary-color);
       }
 
+      #background {
+        position: absolute;
+        background-color: var(--primary-color);
+        bottom: 0;
+        right: 0;
+        left: 0;
+      }
+
     </style>
     <casper-socket id="self_socket"></casper-socket>
     <paper-tooltip for="close">Close dialog</paper-tooltip>
-    <paper-dialog id="dialog" width="[[width]]" height="[[height]]" opened model>
-      <div>
+    <paper-dialog id="dialog" opened modal width="[[width]]" height="[[height]]">
         <div id="header">
           <h2>{{localize('hello', 'name', 'Batman')}}</h2>
           <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
         </div>
-        <div id="status_panel">
-          <span>Waiting for queue</span>
-          <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
-          <paper-button disabled>background</paper-button>
-        </div>
-        <div id="upload_panel">
-          <vaadin-upload id="upload"
+        <div class="pager">
+          <div id="status_panel" class="page">
+            <span>Waiting for queue</span>
+            <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
+            <paper-button id="background">background</paper-button>
+          </div>
+          <div id="upload_panel" class="page">
+            <vaadin-upload id="upload"
                          target="[[uploadUrl]]" 
                          method="POST"
                          timeout="300000" 
                          max-files="1"
                          form-data-name="my-attachment">
-          </vaadin-upload>
+            </vaadin-upload>
+          </div>
         </div> 
       </div>
     </paper-dialog>
@@ -157,6 +181,16 @@
         uploadUrl: {
           type: String,
           value: "/upload"
+        },
+        /** component width in px */
+        width: {
+          type: Number,
+          value: 600
+        },
+        /** component height in px */
+        height: {
+          type: Number,
+          value: 350
         }
       },
 
@@ -175,10 +209,10 @@
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
+        this.$.dialog.style.width  = this.width  + 'px';
+        this.$.dialog.style.height = this.height + 'px';
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
-        //this.$.dialog.fitInto = document.getElementsByTagName('body')[0];
-        //this.$.dialog.open();
       },
 
       detached: function () {
@@ -235,6 +269,7 @@
       },
       
       onSocketClose: function (message) {
+        this.$.dialog.close();
         // Close overlay and flash a message if unexpected
       },
 
@@ -254,7 +289,7 @@
       },
 
       _closeDialog: function (event) {
-        if ( this.iframe && this.job.iframe ) {
+        if ( this.iframe && this.job && this.job.iframe ) {
           this.job.iframe.style.display = 'none';
         }
         this.$.dialog.close();
@@ -263,10 +298,9 @@
       _handlePublicLink: function (notification) {
 
         if ( notification.public_link !== undefined && notification.status !== 'error' ) {
-          console.log('*** got '+notification.status+' link:'+notification.public_link);
-              
           if ( this.downloadIframe === undefined ) {
             this.downloadIframe = document.createElement('iframe');
+            this.downloadIframe.style.display = 'none';
             this.appendChild(this.downloadIframe);
           }
           this.downloadIframe.src = notification.public_link;
