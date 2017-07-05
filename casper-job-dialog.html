@@ -32,7 +32,7 @@
 
 <!--
 `casper-login`
-@demo demo/index.html 
+@demo demo/index.html
 -->
 <dom-module id="casper-job-dialog">
   <template>
@@ -66,7 +66,7 @@
         font-weight: normal;
         font-size: 14px;
         -webkit-font-smoothing: antialiased;
-        background-color: #101010; 
+        background-color: #101010;
         color: white;
         margin: 0px;
       }
@@ -81,7 +81,7 @@
         height: 42px;
         color: white;
         padding: 0px;
-        display: flex; 
+        display: flex;
         align-items: center;
         justify-content: space-between;
       }
@@ -133,7 +133,7 @@
     </style>
     <casper-socket id="self_socket"></casper-socket>
     <paper-tooltip for="close">Close dialog</paper-tooltip>
-    <paper-dialog id="dialog" opened modal width="[[width]]" height="[[height]]">
+    <paper-dialog id="dialog" opened modal>
         <div id="header">
           <h2>{{localize('hello', 'name', 'Batman')}}</h2>
           <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
@@ -146,14 +146,14 @@
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
-                         target="[[uploadUrl]]" 
+                         target="[[uploadUrl]]"
                          method="POST"
-                         timeout="300000" 
+                         timeout="300000"
                          max-files="1"
                          form-data-name="my-attachment">
             </vaadin-upload>
           </div>
-        </div> 
+        </div>
       </div>
     </paper-dialog>
   </template>
@@ -170,8 +170,8 @@
           type: String
         },
         iframe: {
-          type: Boolean,
-          value: false
+          type: Object,
+          value: undefined
         },
         /* Overriden from AppLocalizeBehavior */
         language: {
@@ -213,6 +213,8 @@
         this.$.dialog.style.height = this.height + 'px';
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
+
+
       },
 
       detached: function () {
@@ -221,8 +223,7 @@
       },
 
       setJob: function (job) {
-        this.job   = job;
-        this.jobId = job.tube + '/' + job.id;
+        this.jobId = job;
         if ( this.socket === this.$.self_socket ) {
           this.socket.connect();
         }
@@ -267,7 +268,7 @@
 
         }
       },
-      
+
       onSocketClose: function (message) {
         this.$.dialog.close();
         // Close overlay and flash a message if unexpected
@@ -289,23 +290,31 @@
       },
 
       _closeDialog: function (event) {
-        if ( this.iframe && this.job && this.job.iframe ) {
-          this.job.iframe.style.display = 'none';
+        if ( this.iframe ) {
+          this.iframe.style.display = 'none';
         }
+        console.log("DONE - Close");
         this.$.dialog.close();
       },
 
       _handlePublicLink: function (notification) {
-
         if ( notification.public_link !== undefined && notification.status !== 'error' ) {
           if ( this.downloadIframe === undefined ) {
             this.downloadIframe = document.createElement('iframe');
-            this.downloadIframe.style.display = 'none';
+            this.downloadIframe.style.display = 'block';
             this.appendChild(this.downloadIframe);
           }
-          this.downloadIframe.src = notification.public_link;
+
+          try {
+            this.downloadIframe.src = notification.public_link;
+            //console.table([{public_link: notification.public_link, file: notification.redirect.file}]);
+          } catch (exception) {
+            // All fucked ??? rollbar?
+            debugger;
+          }
+
           this._closeDialog();
-        } 
+        }
       },
 
       _updateUI: function (notification) {
