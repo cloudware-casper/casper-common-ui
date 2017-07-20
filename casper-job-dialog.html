@@ -140,7 +140,7 @@
         </div>
         <div class="pager">
           <div id="status_panel" class="page">
-            <span>Waiting for queue</span>
+            <span id="message">Waiting for queue</span>
             <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
             <paper-button id="background">background</paper-button>
           </div>
@@ -244,6 +244,9 @@
               if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
                 notification = JSON.parse(msg.substring(head.length, msg.length - 1));
 
+                if ( notification.message ) {
+                  this.$.message.innerHTML = notification.message;
+                }
                 /* Martelada */
                 notification.status = 'in-progress';
               }
