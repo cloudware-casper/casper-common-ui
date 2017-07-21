@@ -1,0 +1,162 @@
+<!doctype html>
+<!--
+  - Copyright (c) 2014-2016 Neto Ranito & Seabra LDA. All rights reserved.
+  -
+  - This file is part of casper-common-ui.
+  -
+  - casper-common-ui is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU Affero General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - casper-common-ui  is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU Affero General Public License
+  - along with casper-common-ui.  If not, see <http://www.gnu.org/licenses/>.
+  -
+ -->
+
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`casper-socket`
+websocket client for casper server
+-->
+
+<dom-module id="casper-socket">
+
+  <script>
+    Polymer({
+
+      is: 'casper-socket2',
+
+      properties: {
+        /** The client object TODO multiclients */
+        client: {
+          type: Object
+        },
+        /** websocket schema + hostname (no port no path) */
+        url: {
+          type: String
+        },
+        /** websocket port number, defaults to current page port */
+        port: {
+          type: String
+        },
+        /** Path or route that connects to casper-epaper module */
+        path: {
+          type: String
+        },
+        /** When true socket will connect on attachment */
+        autoConnect: {
+          type: Boolean,
+          value: false
+        }
+      },
+
+      /**
+       * @brief Assign defaults to undefined component attributes
+       */
+      ready: function () {
+        if ( this.url === undefined ) {
+          if ( window.location.protocol === 'https:' ) {
+            this.url = 'wss://' + window.location.hostname;
+          } else {
+            this.url = 'ws://' + window.location.hostname;
+          }
+        }
+        this.port = this.port || window.location.port;
+        this.path = this.path || 'epaper'; 
+        this._freedInvokes  = [];
+        this._activeInvokes = {};
+        this._nextInvokeId  = 1;
+      },
+
+      attached: function () {
+        if ( this.autoConnect ) {
+          this.connect(); // ?? auto or manual?
+        }
+      },
+
+      detached: function () {
+        this._freedInvokes  = null;
+        this._activeInvokes = null;
+        this.disconnect();
+      },
+
+      connect: function () {
+        this._ws_url = this.url + ((this.port != undefined && this.port !== '') ? ':' + this.port : '') + '/' + this.path;
+        if (typeof MozWebSocket != "undefined") {
+          this._socket = new MozWebSocket(this._ws_url, "casper");
+        } else {
+          this._socket = new WebSocket(this._ws_url, "casper");
+        }
+        this._socket.onmessage = function (message) {
+          this.client.onSocketMessage(message);
+        }.bind(this);
+
+        this._socket.onopen = function (message) {
+          this.client.onSocketOpen(message);
+        }.bind(this);
+
+        this._socket.onclose = function (message) {
+          this.client.onSocketClose(message);
+        }.bind(this);
+      },
+
+      /**
+       * Terminate connection to casper server
+       */
+      disconnect: function () {
+        this._socket.close();
+      },
+
+      /**
+       * Send text message to casper server
+       * 
+       * @param {String} message the plain text message to send
+       */
+      sendCommand: function (message) {
+        this._socket.send(message);
+      },
+
+      submitJob: function (job) {
+        var command = {};
+        command.job = job;
+        this._registerCommand(command);
+        this._socket.send(command.invokeId + ':PUT:' + JSON.stringify({target: 'job-queue', tube: job.tube})+':'+JSON.stringify(job));
+      },
+
+      subscribeJob: function (jobId) {
+        var command = {};
+        var p = jobId.split(':');
+        this._registerCommand(command);
+        this._socket.send(command.invokeId + ':SUBSCRIBE:' + JSON.stringify({ target: 'job', tube: p[0], id: p[1] }));
+      },    
+
+      cancelJob: function (jobId) {
+        var command = {};
+        var p = jobId.split(':');
+        this._registerCommand(command);
+        this._socket.send(command.invokeId + ':CANCEL:' + JSON.stringify({ target: 'job-queue', tube: p[0], id: p[1] }));
+      },
+
+      _registerCommand: function (command) {
+        var ivk;
+
+        if ( this._freedInvokes.length === 0 ) {
+          ivk = this._nextInvokeId++;
+        } else {
+          ivk = this._freedInvokes.shift()
+        }
+        command.invokeId = ivk;
+        this._activeInvokes.ivk = command;
+      }
+
+    });
+
+  </script>
+</dom-module>

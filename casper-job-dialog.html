@@ -26,7 +26,7 @@
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
-<link rel="import" href="../casper-common-ui/casper-socket.html">
+<link rel="import" href="../casper-common-ui/casper-socket2.html">
 <link rel="import" href="../vaadin-upload/vaadin-upload.html">
 <link rel="import" href="../app-localize-behavior/app-localize-behavior.html">
 
@@ -131,18 +131,18 @@
       }
 
     </style>
-    <casper-socket id="self_socket"></casper-socket>
-    <paper-tooltip for="close">Close dialog</paper-tooltip>
+    <casper-socket2 id="self_socket"></casper-socket2>
+    <paper-tooltip for="close">{{localize('i18n_close_and_cancel')}}</paper-tooltip>
     <paper-dialog id="dialog" opened modal>
         <div id="header">
-          <h2>{{localize('hello', 'name', 'Batman')}}</h2>
+          <h2>{{localize('i18n_print_job')}}</h2>
           <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
         </div>
         <div class="pager">
           <div id="status_panel" class="page">
-            <span id="message">Waiting for queue</span>
+            <span id="message">{{localize('i18n_waiting_on_queue')}}</span>
             <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
-            <paper-button id="background">background</paper-button>
+            <paper-button id="background" on-tap="_closeDialog">{{localize('i18n_cancel')}}</paper-button>
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
@@ -175,7 +175,7 @@
         },
         /* Overriden from AppLocalizeBehavior */
         language: {
-          value: 'fr',
+          value: 'en',
           type: String
         },
         uploadUrl: {
@@ -191,6 +191,16 @@
         height: {
           type: Number,
           value: 350
+        },
+        /** location of i18n resources */
+        i18n: {
+          type: String,
+          value: undefined
+        },
+        /** location fallback when resources are not translated */
+        useKeyIfMissing: {
+          type: Boolean,
+          value: true
         }
       },
 
@@ -198,14 +208,19 @@
         Polymer.AppLocalizeBehavior
       ],
 
-
       attached: function () {
         if ( this.socket === undefined ) {
           this.socket = this.$.self_socket;
         }
         this.socket.client = this;
-        this.loadResources(this.resolveUrl('locales.json'));
-
+        if ( this.i18n ) {
+          this.loadResources(this.i18n);
+        } else {
+          this.loadResources(this.resolveUrl('locales.json'));
+        }
+        if ( this.socket === this.$.self_socket ) {
+          this.socket.connect();
+        }
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
@@ -213,8 +228,6 @@
         this.$.dialog.style.height = this.height + 'px';
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
-
-
       },
 
       detached: function () {
@@ -224,13 +237,20 @@
 
       setJob: function (job) {
         this.jobId = job;
-        if ( this.socket === this.$.self_socket ) {
-          this.socket.connect();
+        //if ( this.socket === this.$.self_socket ) {
+        //  this.socket.connect();
+        // }
+        // TODO WAIT FOR OPEN
+        if ( this.socket._socket.readyState == 1) {
+          this.socket.subscribeJob(this.jobId);
         }
       },
 
       onSocketOpen: function (message) {
-        this.socket.sendCommand('subscribe job "'+this.jobId+'";');
+        if ( this.jobId ) {
+          this.socket.subscribeJob(this.jobId);
+        }
+        //this.socket.sendCommand('subscribe job "'+this.jobId+'";');
       },
 
       onSocketMessage: function (message) {
@@ -238,30 +258,44 @@
           var notification;
           var msg = message.data;
 
-          switch ( msg[0] ) {
-            case 'N':
-              var head = 'N:subscription:message:'+this.jobId+':';
-              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
-                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
-
-                if ( notification.message ) {
-                  this.$.message.innerHTML = notification.message;
-                }
-                /* Martelada */
-                notification.status = 'in-progress';
-              }
-              break;
-            case 'S':
-              var head = 'S:ok:subscribe job:'+this.jobId+',';
-
-              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
-                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
-
-                /* Martelada */
-                notification.status = 'complete';
-              }
-              break;
+          if ( msg.indexOf('0:N:') === 0 ) {
+            notification = JSON.parse(msg.substring(msg.indexOf('"}:{"')+3));
+            if ( notification.message ) {
+              this.$.message.innerHTML = this.localize.apply(this, notification.message);
+            }
+            /* Martelada */
+            if ( notification.name ) {
+              this.$.message.innerHTML = this.localize.apply(this, notification.name);
+            }
+            notification.status = 'in-progress';
           }
+//          switch ( msg[0] ) {
+//            case 'N':
+//              var head = 'N:subscription:message:'+this.jobId+':';
+//              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
+//                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
+//
+//                if ( notification.message ) {
+//                  this.$.message.innerHTML = this.localize.apply(this, notification.message);
+//                }
+//                /* Martelada */
+//                if ( notification.name ) {
+//                  this.$.message.innerHTML = this.localize.apply(this, notification.name);
+//                }
+//                notification.status = 'in-progress';
+//              }
+//              break;
+//            case 'S':
+//              var head = 'S:ok:subscribe job:'+this.jobId+',';
+//
+//              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
+//                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
+//
+//                /* Martelada */
+//                notification.status = 'complete';
+//              }
+//              break;
+//          }
 
           if ( notification !== undefined ) {
             this._updateUI(notification);
@@ -296,6 +330,9 @@
         if ( this.iframe ) {
           this.iframe.style.display = 'none';
         }
+        if ( this.jobId ) {
+          this.socket.cancelJob(this.jobId);
+        }
         console.log("DONE - Close");
         this.$.dialog.close();
       },
@@ -310,7 +347,6 @@
 
           try {
             this.downloadIframe.src = notification.public_link;
-            //console.table([{public_link: notification.public_link, file: notification.redirect.file}]);
           } catch (exception) {
             // All fucked ??? rollbar?
             debugger;
