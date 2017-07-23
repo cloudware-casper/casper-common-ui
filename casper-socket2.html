@@ -70,12 +70,14 @@ websocket client for casper server
         }
         this.port = this.port || window.location.port;
         this.path = this.path || 'epaper'; 
-        this._freedInvokes  = [];
-        this._activeInvokes = {};
-        this._nextInvokeId  = 1;
+        this._freedInvokes   = [];
+        this._activeInvokes  = {};
+        this._nextInvokeId   = 1;
+        this._pendingCommand = undefined;
       },
 
       attached: function () {
+        this._socket = undefined;
         if ( this.autoConnect ) {
           this.connect(); // ?? auto or manual?
         }
@@ -99,6 +101,10 @@ websocket client for casper server
         }.bind(this);
 
         this._socket.onopen = function (message) {
+          if ( this._pendingCommand !== undefined ) {
+            this._socket.send(this._pendingCommand);
+            this._pendingCommand = undefined;
+          }
           this.client.onSocketOpen(message);
         }.bind(this);
 
@@ -119,29 +125,38 @@ websocket client for casper server
        * 
        * @param {String} message the plain text message to send
        */
-      sendCommand: function (message) {
-        this._socket.send(message);
+      //sendCommand: function (message) {
+      //  this._socket.send(message);
+      //},
+
+      _send: function (message) {
+        if (this._socket === undefined || this._socket.readyState === 0) {
+          this._pendingCommand = message;
+          this.connect()
+        } else if (this._socket.readyState === 1 ) {
+          this._socket.send(message);
+        }
       },
 
       submitJob: function (job) {
         var command = {};
         command.job = job;
         this._registerCommand(command);
-        this._socket.send(command.invokeId + ':PUT:' + JSON.stringify({target: 'job-queue', tube: job.tube})+':'+JSON.stringify(job));
+        this._send(command.invokeId + ':PUT:' + JSON.stringify({target: 'job-queue', tube: job.tube})+':'+JSON.stringify(job));
       },
 
       subscribeJob: function (jobId) {
         var command = {};
         var p = jobId.split(':');
         this._registerCommand(command);
-        this._socket.send(command.invokeId + ':SUBSCRIBE:' + JSON.stringify({ target: 'job', tube: p[0], id: p[1] }));
+        this._send(command.invokeId + ':SUBSCRIBE:' + JSON.stringify({ target: 'job', tube: p[0], id: p[1] }));
       },    
 
       cancelJob: function (jobId) {
         var command = {};
         var p = jobId.split(':');
         this._registerCommand(command);
-        this._socket.send(command.invokeId + ':CANCEL:' + JSON.stringify({ target: 'job-queue', tube: p[0], id: p[1] }));
+        this._send(command.invokeId + ':CANCEL:' + JSON.stringify({ target: 'job-queue', tube: p[0], id: p[1] }));
       },
 
       _registerCommand: function (command) {

@@ -218,9 +218,9 @@
         } else {
           this.loadResources(this.resolveUrl('locales.json'));
         }
-        if ( this.socket === this.$.self_socket ) {
-          this.socket.connect();
-        }
+        //if ( this.socket === this.$.self_socket ) {
+        //  this.socket.connect();
+        //}
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
@@ -237,20 +237,11 @@
 
       setJob: function (job) {
         this.jobId = job;
-        //if ( this.socket === this.$.self_socket ) {
-        //  this.socket.connect();
-        // }
-        // TODO WAIT FOR OPEN
-        if ( this.socket._socket.readyState == 1) {
-          this.socket.subscribeJob(this.jobId);
-        }
+        this.socket.subscribeJob(this.jobId);
       },
 
       onSocketOpen: function (message) {
-        if ( this.jobId ) {
-          this.socket.subscribeJob(this.jobId);
-        }
-        //this.socket.sendCommand('subscribe job "'+this.jobId+'";');
+        // empty 
       },
 
       onSocketMessage: function (message) {
@@ -369,7 +360,7 @@
               }
             }
             break;
-          case 'complete':
+          case 'completed':
             this._handlePublicLink(notification);
             break;
           case 'error':
