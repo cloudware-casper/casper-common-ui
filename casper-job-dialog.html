@@ -218,9 +218,6 @@
         } else {
           this.loadResources(this.resolveUrl('locales.json'));
         }
-        //if ( this.socket === this.$.self_socket ) {
-        //  this.socket.connect();
-        //}
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
@@ -235,66 +232,37 @@
         this.unlisten(this.$.upload, 'upload-success', '_uploadSuccess');
       },
 
-      setJob: function (job) {
-        this.jobId = job;
-        this.socket.subscribeJob(this.jobId);
+      subscribeJob: function (jobId) {
+        this.jobId = jobId;
+        this.socket.subscribeJob(this.jobId, this._setJobResponse.bind(this));
+      },
+
+      _setJobResponse: function (response) {
+        this.onCasperNotification(response.status);
+      },
+
+      submitJob: function (job) {
+        this.socket.submitJob(job, this.submitJobResponse.bind(this));
+      },
+
+      submitJobResponse: function (response) {
+        console.log("got response todo error handling");
       },
 
       onSocketOpen: function (message) {
         // empty 
       },
 
-      onSocketMessage: function (message) {
-        try {
-          var notification;
-          var msg = message.data;
-
-          if ( msg.indexOf('0:N:') === 0 ) {
-            notification = JSON.parse(msg.substring(msg.indexOf('"}:{"')+3));
-            if ( notification.message ) {
-              this.$.message.innerHTML = this.localize.apply(this, notification.message);
-            }
-            /* Martelada */
-            if ( notification.name ) {
-              this.$.message.innerHTML = this.localize.apply(this, notification.name);
-            }
-            notification.status = 'in-progress';
-          }
-//          switch ( msg[0] ) {
-//            case 'N':
-//              var head = 'N:subscription:message:'+this.jobId+':';
-//              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
-//                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
-//
-//                if ( notification.message ) {
-//                  this.$.message.innerHTML = this.localize.apply(this, notification.message);
-//                }
-//                /* Martelada */
-//                if ( notification.name ) {
-//                  this.$.message.innerHTML = this.localize.apply(this, notification.name);
-//                }
-//                notification.status = 'in-progress';
-//              }
-//              break;
-//            case 'S':
-//              var head = 'S:ok:subscribe job:'+this.jobId+',';
-//
-//              if ( msg.indexOf(head) === 0 && msg.length > head.length ) {
-//                notification = JSON.parse(msg.substring(head.length, msg.length - 1));
-//
-//                /* Martelada */
-//                notification.status = 'complete';
-//              }
-//              break;
-//          }
-
-          if ( notification !== undefined ) {
-            this._updateUI(notification);
-          }
-        } catch (exception) {
-          // All fucked ??? rollbar?
-
+      onCasperNotification: function (notification) {
+        if ( notification.message ) {
+          this.$.message.innerHTML = this.localize.apply(this, notification.message);
         }
+        /* Martelada */
+        if ( notification.name ) {
+          this.$.message.innerHTML = this.localize.apply(this, notification.name);
+        }
+        //  notification.status = 'in-progress';
+        this._updateUI(notification);
       },
 
       onSocketClose: function (message) {

@@ -26,7 +26,7 @@
 websocket client for casper server
 -->
 
-<dom-module id="casper-socket">
+<dom-module id="casper-socket2">
 
   <script>
     Polymer({
@@ -71,7 +71,7 @@ websocket client for casper server
         this.port = this.port || window.location.port;
         this.path = this.path || 'epaper'; 
         this._freedInvokes   = [];
-        this._activeInvokes  = {};
+        this._activeRequests = {};
         this._nextInvokeId   = 1;
         this._pendingCommand = undefined;
       },
@@ -84,8 +84,8 @@ websocket client for casper server
       },
 
       detached: function () {
-        this._freedInvokes  = null;
-        this._activeInvokes = null;
+        this._freedInvokes   = null;
+        this._activeRequests = null;
         this.disconnect();
       },
 
@@ -96,9 +96,7 @@ websocket client for casper server
         } else {
           this._socket = new WebSocket(this._ws_url, "casper");
         }
-        this._socket.onmessage = function (message) {
-          this.client.onSocketMessage(message);
-        }.bind(this);
+        this._socket.onmessage = this._onSocketMessage.bind(this);
 
         this._socket.onopen = function (message) {
           if ( this._pendingCommand !== undefined ) {
@@ -125,10 +123,6 @@ websocket client for casper server
        * 
        * @param {String} message the plain text message to send
        */
-      //sendCommand: function (message) {
-      //  this._socket.send(message);
-      //},
-
       _send: function (message) {
         if (this._socket === undefined || this._socket.readyState === 0) {
           this._pendingCommand = message;
@@ -138,28 +132,70 @@ websocket client for casper server
         }
       },
 
-      submitJob: function (job) {
-        var command = {};
-        command.job = job;
-        this._registerCommand(command);
-        this._send(command.invokeId + ':PUT:' + JSON.stringify({target: 'job-queue', tube: job.tube})+':'+JSON.stringify(job));
+      _onSocketMessage: function (message) {
+        try {
+          var request, payload, invokeId;
+
+          if ( message.data.indexOf('0:N:{') === 0 ) {
+            payload = JSON.parse(message.data.substring(message.data.indexOf('"}:{"')+3));
+            this.client.onCasperNotification(payload);
+            return; // We are good
+          } 
+
+          invokeId = parseInt(message.data);
+          if ( !isNaN(invokeId) ) {
+            request = this._activeRequests[invokeId];
+            if ( request !== undefined ) {
+
+              console.log('Got reply to ivk:'+invokeId);
+              var jso = message.data.indexOf(':R:{');
+              if ( jso === -1 ) {
+                jso = message.data.indexOf(':S:{');
+                if ( jso === -1 ) {
+                  jso = message.data.indexOf(':E:{');
+                }
+              }
+              delete this._activeRequests[invokeId];
+              this._freedInvokes.push(invokeId);
+
+              if ( jso !== - 1 ) {
+                payload = JSON.parse(message.data.substring(jso + 3));
+                if ( request.callback !== undefined ) {
+                  request.callback(payload);
+                }
+                return; // We are good
+              }
+
+            }
+          }
+        } catch (exception) {
+
+        }
+        // cleanup and rollbar??
+        return;
       },
 
-      subscribeJob: function (jobId) {
-        var command = {};
+      submitJob: function (job, callback) {
+        var request = { job: job, callback: callback };
+        this._registerRequest(request);
+        this._send(request.invokeId + ':PUT:' + JSON.stringify({target: 'job-queue', tube: job.tube})+':'+JSON.stringify(job));
+      },
+
+      subscribeJob: function (jobId, callback) {
         var p = jobId.split(':');
-        this._registerCommand(command);
-        this._send(command.invokeId + ':SUBSCRIBE:' + JSON.stringify({ target: 'job', tube: p[0], id: p[1] }));
+        var request = { tube: p[0], id: p[1], callback: callback };
+        this._registerRequest(request);
+        this._send(request.invokeId + ':SUBSCRIBE:' + JSON.stringify({ target: 'job', tube: request.tube, id: request.id }));
       },    
 
-      cancelJob: function (jobId) {
-        var command = {};
+      cancelJob: function (jobId, callback) {
         var p = jobId.split(':');
-        this._registerCommand(command);
-        this._send(command.invokeId + ':CANCEL:' + JSON.stringify({ target: 'job-queue', tube: p[0], id: p[1] }));
+        var request = { tube: p[0], id: p[1], callback: callback };
+        this._registerRequest(request);
+        this._send(request.invokeId + ':CANCEL:' + JSON.stringify({ target: 'job-queue', tube: request.tube, id: request.id }));
       },
 
-      _registerCommand: function (command) {
+      _registerRequest: function (request) {
         var ivk;
 
         if ( this._freedInvokes.length === 0 ) {
@@ -167,8 +203,8 @@ websocket client for casper server
         } else {
           ivk = this._freedInvokes.shift()
         }
-        command.invokeId = ivk;
-        this._activeInvokes.ivk = command;
+        request.invokeId = ivk;
+        this._activeRequests[ivk] = request;
       }
 
     });
