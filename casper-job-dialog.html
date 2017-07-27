@@ -135,7 +135,7 @@
     <paper-tooltip for="close">{{localize('i18n_close_and_cancel')}}</paper-tooltip>
     <paper-dialog id="dialog" opened modal>
         <div id="header">
-          <h2>{{localize('i18n_print_job')}}</h2>
+          <h2 id="title">{{localize('i18n_print_job')}}</h2>
           <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
         </div>
         <div class="pager">
@@ -218,13 +218,15 @@
         } else {
           this.loadResources(this.resolveUrl('locales.json'));
         }
+        this.onUploadCallback = undefined;
+
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
         this.$.dialog.style.width  = this.width  + 'px';
         this.$.dialog.style.height = this.height + 'px';
         this.$.upload_panel.style.display = 'none';
-        this.$.status_panel.style.display = 'block';
+        this.$.status_panel.style.display = 'none';
       },
 
       detached: function () {
@@ -233,6 +235,8 @@
       },
 
       subscribeJob: function (jobId) {
+        this.$.upload_panel.style.display = 'none';
+        this.$.status_panel.style.display = 'block';
         this.jobId = jobId;
         this.socket.subscribeJob(this.jobId, this._setJobResponse.bind(this));
       },
@@ -242,11 +246,26 @@
       },
 
       submitJob: function (job) {
+        this.$.upload_panel.style.display = 'none';
+        this.$.status_panel.style.display = 'block';
         this.socket.submitJob(job, this.submitJobResponse.bind(this));
       },
 
       submitJobResponse: function (response) {
         console.log("got response todo error handling");
+      },
+
+      fileUpload: function (onUploadCallback) {
+        this.$.upload_panel.style.display = 'block';
+        this.$.status_panel.style.display = 'none';
+        this._onUploadCallback = onUploadCallback;
+      },
+
+      setTitle: function (i18n_key) {
+        this.async(function() {
+          this.$.title.innerHTML = this.localize(i18n_key);
+          //this.localize('translation')
+        },20);
       },
 
       onSocketOpen: function (message) {
@@ -257,11 +276,6 @@
         if ( notification.message ) {
           this.$.message.innerHTML = this.localize.apply(this, notification.message);
         }
-        /* Martelada */
-        if ( notification.name ) {
-          this.$.message.innerHTML = this.localize.apply(this, notification.name);
-        }
-        //  notification.status = 'in-progress';
         this._updateUI(notification);
       },
 
@@ -279,9 +293,16 @@
 
       _uploadSuccess: function (event) {
         if ( event.detail.xhr.status == 200 ) {
-          this.$.upload_panel.style.display = 'none';
-          this.$.status_panel.style.display = 'block';
-          console.log(event.detail.xhr.responseText);
+          try {
+            response = JSON.parse(event.detail.xhr.responseText)
+            if ( this._onUploadCallback !== undefined ) {
+              this._uploadedTemporaryFile = response.file;
+              this._onUploadCallback();
+              this._onUploadCallback = undefined;
+            }
+          } catch (exception) {
+            // TODO error
+          }
         }
       },
 
@@ -308,30 +329,29 @@
             this.downloadIframe.src = notification.public_link;
           } catch (exception) {
             // All fucked ??? rollbar?
-            debugger;
           }
 
-          this._closeDialog();
         }
       },
 
       _updateUI: function (notification) {
+        if ( notification.progress !== undefined ) {
+          var progress = parseFloat(notification.progress);
+          
+          if ( isNaN(progress) === false ) {
+            this.$.progress.indeterminate = false;
+            this.$.progress.value = progress;
+          }
+        }
         switch (notification.status) {
           case 'in-progress':
-            this._handlePublicLink(notification);
-
-            if ( notification.progress !== undefined ) {
-              var progress = parseFloat(notification.progress);
-              if ( isNaN(progress) === false ) {
-                this.$.progress.indeterminate = false;
-                this.$.progress.value = progress;
-              }
-            }
             break;
           case 'completed':
             this._handlePublicLink(notification);
+            this._closeDialog();
             break;
           case 'error':
+            // TODO Error
             break;
           default:
             break;
