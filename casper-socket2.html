@@ -69,7 +69,7 @@ websocket client for casper server
           }
         }
         this.port = this.port || window.location.port;
-        this.path = this.path || 'epaper'; 
+        this.path = this.path || 'epaper';
         this._freedInvokes   = [];
         this._activeRequests = {};
         this._nextInvokeId   = 1;
@@ -120,7 +120,7 @@ websocket client for casper server
 
       /**
        * Send text message to casper server
-       * 
+       *
        * @param {String} message the plain text message to send
        */
       _send: function (message) {
@@ -140,7 +140,7 @@ websocket client for casper server
             payload = JSON.parse(message.data.substring(message.data.indexOf('"}:{"')+3));
             this.client.onCasperNotification(payload);
             return; // We are good
-          } 
+          }
 
           invokeId = parseInt(message.data);
           if ( !isNaN(invokeId) ) {
@@ -186,7 +186,7 @@ websocket client for casper server
         var request = { tube: p[0], id: p[1], callback: callback };
         this._registerRequest(request);
         this._send(request.invokeId + ':SUBSCRIBE:' + JSON.stringify({ target: 'job', tube: request.tube, id: request.id }));
-      },    
+      },
 
       cancelJob: function (jobId, callback) {
         var p = jobId.split(':');
