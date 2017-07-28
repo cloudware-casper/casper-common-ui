@@ -255,10 +255,11 @@
         console.log("got response todo error handling");
       },
 
-      fileUpload: function (onUploadCallback) {
+      fileUpload: function (onUploadCallback, onUploadCompletedCallback) {
         this.$.upload_panel.style.display = 'block';
         this.$.status_panel.style.display = 'none';
         this._onUploadCallback = onUploadCallback;
+        this._onUploadCompletedCallback = onUploadCompletedCallback;
       },
 
       setTitle: function (i18n_key) {
@@ -312,6 +313,10 @@
         }
         if ( this.jobId ) {
           this.socket.cancelJob(this.jobId);
+        }
+        if ( undefined !== this._onUploadCompletedCallback ) {
+          this._onUploadCompletedCallback();
+          this._onUploadCompletedCallback = undefined;
         }
         console.log("DONE - Close");
         this.$.dialog.close();
