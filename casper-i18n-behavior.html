@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  - Copyright (c) 2014-2016 Neto Ranito & Seabra LDA. All rights reserved.
+  -
+  - This file is part of casper-common-ui.
+  -
+  - casper-common-ui is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU Affero General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - casper-common-ui  is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU Affero General Public License
+  - along with casper-common-ui.  If not, see <http://www.gnu.org/licenses/>.
+  -
+ -->
+
+<link rel="import" href="../polymer/polymer.html">
+<script src="../intl-messageformat/dist/intl-messageformat.min.js"></script>
+
+<!-- TODO inject format JS dependency -->
+ 
+<script>
+
+/**
+ * `Polymer.CasperI18nBehavior` wraps the [format.js](http://formatjs.io/) library to
+ * @polymerBehavior Polymer.CasperI18nBehavior
+ */
+
+Polymer.CasperI18nBehavior = {
+  /**
+   * Internal singleton cache. This is the private implementation of the
+   * behavior; don't interact with it directly.
+   */
+  __i18n_casper_data: {
+    i18n_print_job: {
+      en: 'Print job',
+      pt: 'Tarefa impressão'
+    },
+    i18n_close_and_cancel: {
+      en: 'Close and cancel',
+      pt: 'Fechar e cancelar'
+    },
+    i18n_cancel: {
+      en: 'Cancel',
+      pt: 'Cancelar'
+    },
+    i18n_waiting_on_queue: {
+      en: 'Waiting on queue',
+      pt: 'Em fila de espera'
+    },
+    i18n_reading_original_$image: {   // TODO move to app localization
+      en: 'Reading original image {image}',
+      pt: 'Lendo imagem original {image}'
+    },
+    i18n_scalling_image_$name$geometry: {  // TODO move to app localization
+      en: "Scaling {name} to {geometry}",
+      pt: "Escalando {name} para a geometria {geometry}"
+    },
+    i18n_image_conversion_complete: {  // TODO move to app localization
+      en: 'Image conversion complete',
+      pt: 'Conversão de imagem completa'
+    },
+    i18n_upload_logo: {  // TODO move to app localization
+      en: 'Upload logo',
+      pt: 'Carregar logotipo'
+    },
+    i18n_printing_$document$page: {  // TODO move to app localization
+      en: "Document {document}, page {page}",
+      pt: "Documento {document}, página {page}"
+    }
+  },
+
+  __locale: 'pt',
+
+  i18n: function (message, args) {
+    var proto = this.constructor.prototype;
+    var resources = proto.__i18n_casper_data[message];
+    if ( resources !== undefined ) {
+      var localizedMessage  = resources[proto.__locale]
+                           || resources[proto.__locale.substring(0,2)]
+                           || resources['en']
+                           || message;
+    
+    } else {
+      return message;
+    }
+    if ( args === undefined ) {
+      return localizedMessage;
+    } else {
+      try {
+        var translatedMessage = new IntlMessageFormat(localizedMessage, proto.__locale); // TODO cache??
+        return translatedMessage.format(args);
+
+      } catch (exception) {
+        return localizedMessage;
+      }
+    }    
+  }
+}
+
+</script>
