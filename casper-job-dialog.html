@@ -26,9 +26,9 @@
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
+<link rel="import" href="../casper-common-ui/casper-i18n-behavior.html">
 <link rel="import" href="../casper-common-ui/casper-socket2.html">
 <link rel="import" href="../vaadin-upload/vaadin-upload.html">
-<link rel="import" href="../app-localize-behavior/app-localize-behavior.html">
 
 <!--
 `casper-login`
@@ -129,20 +129,20 @@
         right: 0;
         left: 0;
       }
-
     </style>
+
     <casper-socket2 id="self_socket"></casper-socket2>
-    <paper-tooltip for="close">{{localize('i18n_close_and_cancel')}}</paper-tooltip>
+    <paper-tooltip for="close">{{i18n('i18n_close_and_cancel')}}</paper-tooltip>
     <paper-dialog id="dialog" opened modal>
         <div id="header">
-          <h2 id="title">{{localize('i18n_print_job')}}</h2>
+          <h2 id="title">{{i18n('i18n_print_job')}}</h2>
           <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
         </div>
         <div class="pager">
           <div id="status_panel" class="page">
-            <span id="message">{{localize('i18n_waiting_on_queue')}}</span>
+            <span id="message">{{i18n('i18n_waiting_on_queue')}}</span>
             <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
-            <paper-button id="background" on-tap="_closeDialog">{{localize('i18n_cancel')}}</paper-button>
+            <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
@@ -173,11 +173,6 @@
           type: Object,
           value: undefined
         },
-        /* Overriden from AppLocalizeBehavior */
-        language: {
-          value: 'en',
-          type: String
-        },
         uploadUrl: {
           type: String,
           value: "/upload"
@@ -191,21 +186,11 @@
         height: {
           type: Number,
           value: 350
-        },
-        /** location of i18n resources */
-        i18n: {
-          type: String,
-          value: undefined
-        },
-        /** location fallback when resources are not translated */
-        useKeyIfMissing: {
-          type: Boolean,
-          value: true
         }
       },
 
       behaviors: [
-        Polymer.AppLocalizeBehavior
+        Polymer.CasperI18nBehavior
       ],
 
       attached: function () {
@@ -213,11 +198,6 @@
           this.socket = this.$.self_socket;
         }
         this.socket.client = this;
-        if ( this.i18n ) {
-          this.loadResources(this.i18n);
-        } else {
-          this.loadResources(this.resolveUrl('locales.json'));
-        }
         this.onUploadCallback = undefined;
 
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
@@ -264,10 +244,11 @@
       },
 
       setTitle: function (i18n_key) {
-        this.async(function() {
-          this.$.title.innerHTML = this.localize(i18n_key);
-          //this.localize('translation')
-        },20);
+        this.$.title.innerHTML = this.i18n(i18n_key);
+
+        //this.async(function() {
+        //  this.$.title.innerHTML = this.i18n(i18n_key);
+        //},20);
       },
 
       onSocketOpen: function (message) {
@@ -276,7 +257,7 @@
 
       onCasperNotification: function (notification) {
         if ( notification.message ) {
-          this.$.message.innerHTML = this.localize.apply(this, notification.message);
+          this.$.message.innerHTML = this.i18n.apply(this, notification.message);
         }
         this._updateUI(notification);
       },

@@ -23,7 +23,7 @@
 <script src="../intl-messageformat/dist/intl-messageformat.min.js"></script>
 
 <!-- TODO inject format JS dependency -->
- 
+
 <script>
 
 /**
@@ -75,7 +75,7 @@ Polymer.CasperI18nBehavior = {
     }
   },
 
-  __locale: 'pt',
+  __locale: window.localStorage.getItem('Casper-Locale') || navigator.language || navigator.userLanguage,
 
   i18n: function (message, args) {
     var proto = this.constructor.prototype;
@@ -89,14 +89,18 @@ Polymer.CasperI18nBehavior = {
     } else {
       return message;
     }
-    if ( args === undefined ) {
+    if ( args === undefined || (Object.keys(args).length === 0 && args.constructor === Object) ) {
       return localizedMessage;
     } else {
       try {
+        console.time('i18n');
         var translatedMessage = new IntlMessageFormat(localizedMessage, proto.__locale); // TODO cache??
-        return translatedMessage.format(args);
+        var rv = translatedMessage.format(args);
+        console.timeEnd('i18n');
+        return rv;
 
       } catch (exception) {
+        console.log(exception);
         return localizedMessage;
       }
     }    
