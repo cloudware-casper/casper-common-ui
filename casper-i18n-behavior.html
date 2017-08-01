@@ -75,7 +75,57 @@ Polymer.CasperI18nBehavior = {
     }
   },
 
+  __upload_i18n: {
+    pt: {
+      dropFiles: {
+        one: 'Arraste ficheiro para aqui...',
+        many: 'Arraste ficheiros para aqui...'
+      },
+      addFiles: {
+        one: 'Seleccione Ficheiro',
+        many: 'Seleccione Ficheiros'
+      },
+      cancel: 'Cancelar',
+      error: {
+        tooManyFiles: 'Demasiados ficheiros.',
+        fileIsTooBig: 'O ficheiro é demasiado grande.',
+        incorrectFileType: 'Tipo ficheiro incorrecto.'
+      },
+      uploading: {
+        status: {
+          connecting: 'Estabelendo ligação ...',
+          stalled: 'Transferência parada.',
+          processing: 'Processando ficheiro ...',
+          held: 'Em espera'
+        },
+        remainingTime: {
+          prefix: 'tempo de espera: ',
+          unknown: 'tempo de espera desconhecido'
+        },
+        error: {
+          serverUnavailable: 'Servidor indisponível',
+          unexpectedServerError: 'Erro inesperado no servidor',
+          forbidden: 'Não autorizado'
+        }
+      },
+      units: {
+        size: ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+      }
+    }
+  },
+
   __locale: window.localStorage.getItem('Casper-Locale') || navigator.language || navigator.userLanguage,
+
+  i18nUpdateUpload: function (vaadinUpload) {
+    var proto = this.constructor.prototype;
+
+    var resources  = proto.__upload_i18n[proto.__locale] 
+                  || proto.__upload_i18n[proto.__locale.substring(0,2)];
+
+    if ( resources !== undefined ) {
+      vaadinUpload.i18n = resources;
+    }
+  },
 
   i18n: function (message, args) {
     var proto = this.constructor.prototype;
