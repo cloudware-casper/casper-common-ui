@@ -89,7 +89,7 @@
       .pager {
         position:absolute;
         display: block;
-        bottom:0;
+        bottom:42px;
         top: 42px;
         left:0;
         right:0;
@@ -110,7 +110,7 @@
         top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
+        bottom: 6px;
       }
 
       iron-icon, h2 {
@@ -125,6 +125,8 @@
       #background {
         position: absolute;
         background-color: var(--primary-color);
+        height: 36px;
+        margin: 12px;
         bottom: 0;
         right: 0;
         left: 0;
@@ -142,7 +144,6 @@
           <div id="status_panel" class="page">
             <span id="message">{{i18n('i18n_waiting_on_queue')}}</span>
             <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
-            <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
@@ -154,6 +155,7 @@
             </vaadin-upload>
           </div>
         </div>
+        <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
       </div>
     </paper-dialog>
   </template>
