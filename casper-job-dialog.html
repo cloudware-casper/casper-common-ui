@@ -230,11 +230,16 @@
       submitJob: function (job) {
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
+        this._submitedTube = job.tube; 
         this.socket.submitJob(job, this.submitJobResponse.bind(this));
       },
 
       submitJobResponse: function (response) {
-        console.log("got response todo error handling");
+        if ( response.success === true ) {
+          this.jobId = this._submitedTube + ':' + response.id;
+        } else {
+          console.log("got response todo error handling");
+        }
       },
 
       fileUpload: function (onUploadCallback, onUploadCompletedCallback) {
