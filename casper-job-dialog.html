@@ -89,7 +89,7 @@
       .pager {
         position:absolute;
         display: block;
-        bottom:0;
+        bottom:42px;
         top: 42px;
         left:0;
         right:0;
@@ -110,7 +110,7 @@
         top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
+        bottom: 6px;
       }
 
       iron-icon, h2 {
@@ -125,6 +125,8 @@
       #background {
         position: absolute;
         background-color: var(--primary-color);
+        height: 36px;
+        margin: 12px;
         bottom: 0;
         right: 0;
         left: 0;
@@ -142,7 +144,6 @@
           <div id="status_panel" class="page">
             <span id="message">{{i18n('i18n_waiting_on_queue')}}</span>
             <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
-            <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
@@ -155,6 +156,7 @@
             </vaadin-upload>
           </div>
         </div>
+        <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
       </div>
     </paper-dialog>
   </template>
@@ -204,7 +206,7 @@
         }
         this.socket.client = this;
         this.onUploadCallback = undefined;
-
+        this.i18nUpdateUpload(this.$.upload);
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
@@ -233,11 +235,16 @@
       submitJob: function (job) {
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
+        this._submitedTube = job.tube; 
         this.socket.submitJob(job, this.submitJobResponse.bind(this));
       },
 
       submitJobResponse: function (response) {
-        console.log("got response todo error handling");
+        if ( response.success === true ) {
+          this.jobId = this._submitedTube + ':' + response.id;
+        } else {
+          console.log("got response todo error handling");
+        }
       },
 
       fileUpload: function (onUploadCallback, onUploadCompletedCallback) {
@@ -250,10 +257,6 @@
 
       setTitle: function (i18n_key) {
         this.$.title.innerHTML = this.i18n(i18n_key);
-
-        //this.async(function() {
-        //  this.$.title.innerHTML = this.i18n(i18n_key);
-        //},20);
       },
 
       onSocketOpen: function (message) {
@@ -341,7 +344,7 @@
             break;
           case 'completed':
             this._handlePublicLink(notification);
-            this._onUploadCompletedCallbackData = { link: notification.link }
+            this._onUploadCompletedCallbackData = { link: notification.link };
             this._closeDialog();
             break;
           case 'error':
