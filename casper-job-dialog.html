@@ -149,6 +149,7 @@
                          target="[[uploadUrl]]"
                          method="POST"
                          timeout="300000"
+                         noAuto="[[noAuto]]"
                          max-files="1"
                          form-data-name="my-attachment">
             </vaadin-upload>
@@ -176,6 +177,10 @@
         uploadUrl: {
           type: String,
           value: "/upload"
+        },
+        noAuto: {
+          type: Boolean,
+          value: false
         },
         /** component width in px */
         width: {
@@ -325,7 +330,7 @@
       _updateUI: function (notification) {
         if ( notification.progress !== undefined ) {
           var progress = parseFloat(notification.progress);
-          
+
           if ( isNaN(progress) === false ) {
             this.$.progress.indeterminate = false;
             this.$.progress.value = progress;
