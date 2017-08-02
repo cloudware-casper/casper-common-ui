@@ -113,12 +113,44 @@
         bottom: 6px;
       }
 
-      iron-icon, h2 {
+      .header {
         fill: white;
         margin: 8px;
       }
 
-      iron-icon:hover {
+      .close {
+        fill: white;
+        margin: 8px;        
+      }
+
+      .error_panel {
+        display: inline-flex;
+        align-items: flex-start;
+      }
+
+      .error_pad {
+        width: 72px;
+        height: 100%;
+        margin-right: 12px;
+      }
+
+      .error_icon {
+        fill: #B94F4F;
+        --iron-icon-height: 72px;
+        --iron-icon-width: 72px;
+      }
+
+      .error_message {
+        font-size: 16px;
+        font-weight: 500;
+        color: #444;
+        right: 0;
+        top: 0;
+        overflow: auto;
+        margin: 0;
+      }
+
+      .close:hover {
         background-color: var(--primary-color);
       }
 
@@ -137,8 +169,8 @@
     <paper-tooltip for="close">{{i18n('i18n_close_and_cancel')}}</paper-tooltip>
     <paper-dialog id="dialog" opened modal>
         <div id="header">
-          <h2 id="title">{{i18n('i18n_print_job')}}</h2>
-          <iron-icon icon="close" id="close" on-tap="_closeDialog"></iron-icon>
+          <h2 id="title" class="header">{{i18n('i18n_print_job')}}</h2>
+          <iron-icon icon="close" id="close" class="close" on-tap="_closeDialog"></iron-icon>
         </div>
         <div class="pager">
           <div id="status_panel" class="page">
@@ -153,6 +185,15 @@
                          max-files="1"
                          form-data-name="my-attachment">
             </vaadin-upload>
+          </div>
+          <div id="error_panel" class="page error_panel">
+            <div class="error_pad">
+              <iron-icon icon="error-outline" class="error_icon"></iron-icon>
+            </div>
+            <div class="error_message">
+              <h2>[[i18n('i18n_error')]]</h2>
+              <span id="error_message"></span>
+            </div>
           </div>
         </div>
         <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
@@ -209,6 +250,7 @@
         this.$.dialog.style.height = this.height + 'px';
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'none';
+        this.$.error_panel.style.display = 'none';
       },
 
       detached: function () {
@@ -219,6 +261,7 @@
       subscribeJob: function (jobId) {
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
+        this.$.error_panel.style.display = 'none';
         this.jobId = jobId;
         this.socket.subscribeJob(this.jobId, this._setJobResponse.bind(this));
       },
@@ -230,6 +273,7 @@
       submitJob: function (job) {
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
+        this.$.error_panel.style.display = 'none';
         this._submitedTube = job.tube; 
         this.socket.submitJob(job, this.submitJobResponse.bind(this));
       },
@@ -238,13 +282,17 @@
         if ( response.success === true ) {
           this.jobId = this._submitedTube + ':' + response.id;
         } else {
-          console.log("got response todo error handling");
+          response.status = 'error';
+          response.message = response.message || [ 'i18n_internal_error' ];
+          this._updateUI(response);
+          // TODO SEND ERROR DETAIL TO ROLLBAR?
         }
       },
 
       fileUpload: function (onUploadCallback, onUploadCompletedCallback) {
         this.$.upload_panel.style.display = 'block';
         this.$.status_panel.style.display = 'none';
+        this.$.error_panel.style.display = 'none';
         this._onUploadCallback = onUploadCallback;
         this._onUploadCompletedCallback = onUploadCompletedCallback;
         this._onUploadCompletedCallbackData = undefined
@@ -343,7 +391,10 @@
             this._closeDialog();
             break;
           case 'error':
-            // TODO Error
+            this.$.upload_panel.style.display = 'none';
+            this.$.status_panel.style.display = 'none';
+            this.$.error_panel.style.display = 'inline-flex';
+            this.$.error_message.innerHTML = this.i18n.apply(this, notification.message);
             break;
           default:
             break;
