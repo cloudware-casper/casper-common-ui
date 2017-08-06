@@ -50,14 +50,6 @@
 
       paper-progress.slow {
         --paper-progress-indeterminate-cycle-duration: 5s;
-      }
-
-      paper-progress.blue {
-        --paper-progress-active-color: var(--paper-light-blue-500);
-        --paper-progress-secondary-color: var(--paper-light-blue-100);
-      }
-
-      paper-progress.red {
         --paper-progress-active-color: var(--primary-color);
         --paper-progress-secondary-color: var(--paper-red-100);
       }
@@ -174,8 +166,10 @@
         </div>
         <div class="pager">
           <div id="status_panel" class="page">
-            <span id="message">{{i18n('i18n_waiting_on_queue')}}</span>
-            <paper-progress id="progress" indeterminate class="slow red"></paper-progress>
+            <template is="dom-repeat" items="{{progress}}">
+              <span>{{item.message}}</span>
+              <paper-progress indeterminate class="slow"></paper-progress>
+            </template>
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
@@ -234,12 +228,21 @@
         height: {
           type: Number,
           value: 350
+        },
+        /** Number of progress bars */
+        progressCount: {
+          type: Number,
+          value: 1
         }
       },
 
       behaviors: [
         Polymer.CasperI18nBehavior
       ],
+
+      ready: function () {
+        this.setProgressCount(this.progressCount, true);
+      },
 
       attached: function () {
         if ( this.socket === undefined ) {
@@ -307,20 +310,31 @@
         this.$.title.innerHTML = this.i18n(i18n_key);
       },
 
+      setProgressCount: function (count, forced) {
+        if ( count !== this.progressCount || forced) {
+          this.progressCount = count;
+          this.progress = null;
+          var pdata = Array.apply(null, { length: this.progressCount }).map(function() { return { message: '\xA0' }; });
+          pdata[0].message = this.i18n('i18n_waiting_on_queue');
+          this.progress = pdata;
+        }
+      },
+
       onSocketOpen: function (message) {
         // empty
       },
 
       onCasperNotification: function (notification) {
         if ( notification.message ) {
-          this.$.message.innerHTML = this.i18n.apply(this, notification.message);
+          var idx  = notification.index || 0;
+          this.progress[idx].message = this.i18n.apply(this, notification.message);
+          this.notifyPath('progress.'+idx+'.message');
         }
         this._updateUI(notification);
       },
 
       onSocketClose: function (message) {
         this.$.dialog.close();
-        // Close overlay and flash a message if unexpected
       },
 
       _uploadRequest: function (event) {
@@ -357,7 +371,6 @@
           this._onUploadCompletedCallback = undefined;
           this._onUploadCompletedCallbackData = undefined;
         }
-        console.log("DONE - Close");
         this.$.dialog.close();
       },
 
@@ -383,8 +396,10 @@
           var progress = parseFloat(notification.progress);
 
           if ( isNaN(progress) === false ) {
-            this.$.progress.indeterminate = false;
-            this.$.progress.value = progress;
+            var idx  = notification.index || 0; idx += 1; 
+            var pbar = this.$$('paper-progress:nth-of-type('+idx+')'); 
+            pbar.indeterminate = false;
+            pbar.value = progress;
           }
         }
         switch (notification.status) {
@@ -406,7 +421,7 @@
         }
       },
 
-      _reportError: function(response) {
+      _reportError: function (response) {
         if ( Rollbar !== undefined ) {
           if ( response instanceof Error ) {
             Rollbar.error('Casper, job-dialog:', response);
