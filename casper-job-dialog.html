@@ -288,7 +288,7 @@
           this.jobId = this._submitedTube + ':' + response.id;
         } else {
           response.status = 'error';
-          response.message = response.message || [ 'i18n_internal_error' ];
+          response.message = [ 'i18n_submit_job_error$tube', { tube: this._submitedTube } ];
           this._updateUI(response);
           this._reportError(response);
         }
@@ -411,7 +411,7 @@
           if ( response instanceof Error ) {
             Rollbar.error('Casper, job-dialog:', response);
           } else if ( response.errors && response.errors[0].internal ) {
-            Rollbar.error('Casper, internal:' + JSON.stringify(response.errors[0].internal));
+            Rollbar.error('Casper, internal: ' + JSON.stringify(response.errors[0].internal));
           }
         }
       }
