@@ -290,7 +290,7 @@
           response.status = 'error';
           response.message = response.message || [ 'i18n_internal_error' ];
           this._updateUI(response);
-          // TODO SEND ERROR DETAIL TO ROLLBAR?
+          this._reportError(response);
         }
       },
 
@@ -340,7 +340,7 @@
               this._onUploadCallback = undefined;
             }
           } catch (exception) {
-            // TODO error
+            this._reportError(exception);
           }
         }
       },
@@ -372,7 +372,7 @@
           try {
             this.downloadIframe.src = notification.public_link;
           } catch (exception) {
-            // All fucked ??? rollbar?
+            this._reportError(exception);
           }
 
         }
@@ -403,6 +403,16 @@
             break;
           default:
             break;
+        }
+      },
+
+      _reportError: function(response) {
+        if ( Rollbar !== undefined ) {
+          if ( response instanceof Error ) {
+            Rollbar.error('Casper, job-dialog:', response);
+          } else if ( response.errors && response.errors[0].internal ) {
+            Rollbar.error('Casper, internal:' + JSON.stringify(response.errors[0].internal));
+          }
         }
       }
 
