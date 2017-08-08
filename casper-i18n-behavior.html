@@ -55,7 +55,15 @@ Polymer.CasperI18nBehavior = {
     i18n_waiting_on_queue: {
       en: 'Waiting on queue',
       pt: 'Em fila de espera'
-    }
+    },
+    i18n_internal_error: {
+      en: 'Internal error',
+      pt: 'Error interno'
+    },
+    i18n_submit_job_error$tube: {
+      en: 'Job submit failed ({tube} queue})',
+      pt: 'Erro ao submeter tarefa (fila {tube})'
+    },
   },
 
   __upload_i18n: {
@@ -100,10 +108,10 @@ Polymer.CasperI18nBehavior = {
   __locale: window.localStorage.getItem('Casper-Locale') || navigator.language || navigator.userLanguage,
 
   i18nUpdateUpload: function (vaadinUpload) {
-    var proto = this.constructor.prototype;
+    var i18n_behavior = Polymer.CasperI18nBehavior;
 
-    var resources  = proto.__upload_i18n[proto.__locale] 
-                  || proto.__upload_i18n[proto.__locale.substring(0,2)];
+    var resources  = i18n_behavior.__upload_i18n[i18n_behavior.__locale] 
+                  || i18n_behavior.__upload_i18n[i18n_behavior.__locale.substring(0,2)];
 
     if ( resources !== undefined ) {
       vaadinUpload.i18n = resources;
@@ -111,11 +119,11 @@ Polymer.CasperI18nBehavior = {
   },
 
   i18n: function (message, args) {
-    var proto = this.constructor.prototype;
-    var resources = proto.__i18n_casper_data[message];
+    var i18n_behavior = Polymer.CasperI18nBehavior;
+    var resources = i18n_behavior.__i18n_casper_data[message];
     if ( resources !== undefined ) {
-      var localizedMessage  = resources[proto.__locale]
-                           || resources[proto.__locale.substring(0,2)]
+      var localizedMessage  = resources[i18n_behavior.__locale]
+                           || resources[i18n_behavior.__locale.substring(0,2)]
                            || resources['en']
                            || message;
     
@@ -127,7 +135,7 @@ Polymer.CasperI18nBehavior = {
     } else {
       try {
         console.time('i18n');
-        var translatedMessage = new IntlMessageFormat(localizedMessage, proto.__locale); // TODO cache??
+        var translatedMessage = new IntlMessageFormat(localizedMessage, i18n_behavior.__locale); // TODO cache??
         var rv = translatedMessage.format(args);
         console.timeEnd('i18n');
         return rv;
