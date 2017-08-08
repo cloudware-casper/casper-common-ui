@@ -25,9 +25,13 @@
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../casper-common-ui/casper-i18n-behavior.html">
 <link rel="import" href="../casper-common-ui/casper-socket2.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../vaadin-upload/vaadin-upload.html">
 
 <!--
@@ -71,6 +75,12 @@
         margin: 0px;
       }
 
+      paper-dialog {
+        max-width: 600px;
+        min-width: 400px;
+        min-height: 250px;
+      }
+
       .paper-dialog-0 > * {
         padding: 0px;
         margin: 0px;
@@ -87,7 +97,6 @@
       }
 
       .pager {
-        position:absolute;
         display: block;
         bottom:42px;
         top: 42px;
@@ -96,7 +105,6 @@
       }
 
       .page {
-        position: absolute;
         top: 0;
         left: 0;
         right: 0;
@@ -106,7 +114,6 @@
       }
 
       #upload {
-        position: absolute;
         top: 0;
         left: 0;
         right: 0;
@@ -120,7 +127,7 @@
 
       .close {
         fill: white;
-        margin: 8px;        
+        margin: 8px;
       }
 
       .error_panel {
@@ -155,13 +162,27 @@
       }
 
       #background {
-        position: absolute;
         background-color: var(--primary-color);
         height: 36px;
         margin: 12px;
         bottom: 0;
         right: 0;
         left: 0;
+        width: 50%;
+      }
+      #submit {
+        background-color: var(--primary-color);
+        height: 36px;
+        margin: 12px;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        width: 50%;
+        text-align: center;
+      }
+
+      #button_container {
+        display: flex;
       }
     </style>
 
@@ -180,10 +201,9 @@
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
                          target="[[uploadUrl]]"
+                         max-files="1"
                          method="POST"
                          timeout="300000"
-                         noAuto="[[noAuto]]"
-                         max-files="1"
                          form-data-name="my-attachment">
             </vaadin-upload>
           </div>
@@ -197,8 +217,10 @@
             </div>
           </div>
         </div>
-        <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
-      </div>
+        <div id="button_container">
+          <paper-button id="submit" on-tap="_submitData">{{i18n('i18n_submit')}}</paper-button>
+          <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
+        </div>
     </paper-dialog>
   </template>
 
@@ -225,15 +247,17 @@
           type: Boolean,
           value: false
         },
-        /** component width in px */
-        width: {
-          type: Number,
-          value: 600
+        method: {
+          type: String,
+          value: 'GET'
         },
-        /** component height in px */
-        height: {
-          type: Number,
-          value: 350
+        content_type: {
+          type: String,
+          value: 'application/html'
+        },
+        handle_as: {
+          type: String,
+          value: 'html'
         }
       },
 
@@ -251,11 +275,12 @@
         this.listen(this.$.upload, 'upload-success', '_uploadSuccess');
         this.listen(this.$.upload, 'upload-request', '_uploadRequest');
 
-        this.$.dialog.style.width  = this.width  + 'px';
-        this.$.dialog.style.height = this.height + 'px';
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'none';
         this.$.error_panel.style.display = 'none';
+
+        this.$.submit.style.display = 'none';
+        this.$.background.style.width = '100%';
       },
 
       detached: function () {
@@ -279,7 +304,7 @@
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'block';
         this.$.error_panel.style.display = 'none';
-        this._submitedTube = job.tube; 
+        this._submitedTube = job.tube;
         this.socket.submitJob(job, this.submitJobResponse.bind(this));
       },
 
@@ -404,6 +429,16 @@
           default:
             break;
         }
+      },
+
+      registerSubmit: function (callback) {
+        this.$.submit.style.display = 'block';
+        this.$.background.style.width = '50%';
+
+        this.$._onSubmitClick = callback;
+      },
+      _submitData: function (event) {
+        this.$._onSubmitClick();
       }
 
     });
