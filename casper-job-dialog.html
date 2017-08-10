@@ -70,8 +70,9 @@
       #dialog {
         display: flex;
         flex-direction: column;
-        max-width: 600px;
+        max-width: 400px;
         min-width: 400px;
+        max-height: 450px;
         min-height: 250px;
       }
 
@@ -118,8 +119,9 @@
         margin: 8px;
       }
 
-      .error_panel {
-        display: inline-flex;
+      #error_panel {
+        display: flex;
+        flex-direction: row;
         align-items: flex-start;
       }
 
@@ -240,11 +242,6 @@
         handle_as: {
           type: String,
           value: 'html'
-        },
-        /** component height in px */
-        height: {
-          type: Number,
-          value: 350
         },
         /** Number of progress bars */
         progressCount: {
