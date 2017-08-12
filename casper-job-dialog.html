@@ -291,7 +291,13 @@
       },
 
       _setJobResponse: function (response) {
-        this.onCasperNotification(response.status);
+        if ( response.status.status === 'failed' || response.status.status === 'error' ) {
+          if ( ! response.status.message ) {
+            response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];  
+          }
+          this._reportError(response.status);
+        }
+        this._updateUI(response.status);
       },
 
       submitJob: function (job) {
@@ -306,7 +312,7 @@
         if ( response.success === true ) {
           this.jobId = this._submitedTube + ':' + response.id;
         } else {
-          response.status = 'error';
+          response.status = 'failed';
           response.message = [ 'i18n_submit_job_error$tube', { tube: this._submitedTube } ];
           this._updateUI(response);
           this._reportError(response);
@@ -323,7 +329,7 @@
       },
 
       setTitle: function (i18n_key) {
-        this.$.title.innerHTML = this.i18n(i18n_key);
+        this.$.title.textContent = this.i18n(i18n_key);
       },
 
       setProgressCount: function (count, forced) {
@@ -334,6 +340,13 @@
           pdata[0].message = this.i18n('i18n_waiting_on_queue');
           this.progress = pdata;
         }
+      },
+
+      registerSubmit: function (callback) {
+        this.$.submit.style.display = 'block';
+        this.$.background.style.width = '50%';
+
+        this.$._onSubmitClick = callback;
       },
 
       onSocketOpen: function (message) {
@@ -350,7 +363,7 @@
       },
 
       onSocketClose: function (message) {
-        this.$.dialog.close();
+        this._showError(['i18n_websocket_disconnected']);
       },
 
       _uploadRequest: function (event) {
@@ -426,22 +439,20 @@
             this._onUploadCompletedCallbackData = { link: notification.link };
             this._closeDialog();
             break;
+          case 'failed':
           case 'error':
-            this.$.upload_panel.style.display = 'none';
-            this.$.status_panel.style.display = 'none';
-            this.$.error_panel.style.display = 'inline-flex';
-            this.$.error_message.innerHTML = this.i18n.apply(this, notification.message);
+            this._showError(notification.message);
             break;
           default:
             break;
         }
       },
 
-      registerSubmit: function (callback) {
-        this.$.submit.style.display = 'block';
-        this.$.background.style.width = '50%';
-
-        this.$._onSubmitClick = callback;
+      _showError: function (message) {
+        this.$.upload_panel.style.display = 'none';
+        this.$.status_panel.style.display = 'none';
+        this.$.error_panel.style.display = 'inline-flex';
+        this.$.error_message.textContent = this.i18n.apply(this, message);
       },
 
       _submitData: function (event) {
@@ -452,8 +463,8 @@
         if ( Rollbar !== undefined ) {
           if ( response instanceof Error ) {
             Rollbar.error('Casper, job-dialog:', response);
-          } else if ( response.errors && response.errors[0].internal ) {
-            Rollbar.error('Casper, internal: ' + JSON.stringify(response.errors[0].internal));
+          } else if ( response.errors ) {
+            Rollbar.error('Casper, internal: ' + JSON.stringify(response.errors));
           }
         }
       }
