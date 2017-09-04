@@ -293,7 +293,7 @@
       _setJobResponse: function (response) {
         if ( response.status.status === 'failed' || response.status.status === 'error' ) {
           if ( ! response.status.message ) {
-            response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];  
+            response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];
           }
           this._reportError(response.status);
         }
@@ -347,6 +347,24 @@
         this.$.background.style.width = '50%';
 
         this.$._onSubmitClick = callback;
+      },
+
+      getFilename: function(i18n_key, translation_parameters){
+        i18n_key = 'i18n_filename_' + i18n_key;
+
+        console.log("%c i18n_key: " + i18n_key, "color: yellow; font-size: 20px; background-color: black;padding: 2px");
+        console.table([translation_parameters])
+
+        try {
+          translation_obj = { name: this.i18n(i18n_key, translation_parameters), title: this.i18n(i18n_key, translation_parameters) }
+        } catch (e) {
+          console.error(i18n_key, e);
+          debugger
+        }
+
+
+        console.table([translation_obj]);
+        return translation_obj;
       },
 
       onSocketOpen: function (message) {
