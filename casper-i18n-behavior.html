@@ -109,7 +109,7 @@ Polymer.CasperI18nBehavior = {
     }
   },
 
-  __locale: window.localStorage.getItem('Casper-Locale') || navigator.language || navigator.userLanguage,
+  __locale: window.localStorage.getItem('Casper-Locale') || 'pt', //navigator.language || navigator.userLanguage,
 
   i18nUpdateUpload: function (vaadinUpload) {
     var i18n_behavior = Polymer.CasperI18nBehavior;
