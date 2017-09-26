@@ -428,6 +428,10 @@
           this._onUploadCompletedCallback = undefined;
           this._onUploadCompletedCallbackData = undefined;
         }
+        this.$.upload_panel.style.display = 'none';
+        this.$.status_panel.style.display = 'flex';
+        this.$.error_panel.style.display = 'none';
+        this.$.error_message.textContent = '';
         this.$.dialog.close();
       },
 
