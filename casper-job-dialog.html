@@ -358,8 +358,13 @@
       getFilename: function(i18n_key, translation_parameters){
         i18n_key = 'i18n_filename_' + i18n_key;
 
-        console.log("%c i18n_key: " + i18n_key, "color: yellow; font-size: 20px; background-color: black;padding: 2px");
-        console.table([translation_parameters])
+        if(translation_parameters.date === undefined){
+          var today = new Date();
+          var year = today.getFullYear();
+          var month = today.getMonth().toString().length == 1 ? '0' + today.getMonth() : today.getMonth();
+          var full_date = year + '-' + month;
+          Polymer.Base.extend(translation_parameters, {date: full_date})
+        }
 
         try {
           translation_obj = { name: this.i18n(i18n_key, translation_parameters), title: this.i18n(i18n_key, translation_parameters) }
@@ -368,8 +373,6 @@
           debugger
         }
 
-
-        console.table([translation_obj]);
         return translation_obj;
       },
 
@@ -417,7 +420,7 @@
           this.iframe.style.display = 'none';
         }
         if ( this.jobId ) {
-          this.socket.cancelJob(this.jobId, function() { 
+          this.socket.cancelJob(this.jobId, function() {
             if ( this._closeSocket ) {
               this.socket.disconnect();
             }

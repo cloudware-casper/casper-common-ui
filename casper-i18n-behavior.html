@@ -138,17 +138,17 @@ Polymer.CasperI18nBehavior = {
       return localizedMessage;
     } else {
       try {
-        console.time('i18n');
+        // console.time('i18n');
         var translatedMessage = new IntlMessageFormat(localizedMessage, i18n_behavior.__locale); // TODO cache??
         var rv = translatedMessage.format(args);
-        console.timeEnd('i18n');
+        // console.timeEnd('i18n');
         return rv;
 
       } catch (exception) {
         console.log(exception);
         return localizedMessage;
       }
-    }    
+    }
   }
 }
 
