@@ -88,7 +88,7 @@ Polymer.CasperI18nBehavior = {
       },
       uploading: {
         status: {
-          connecting: 'Estabelendo ligação ...',
+          connecting: 'Estabelecendo ligação ...',
           stalled: 'Transferência parada.',
           processing: 'Processando ficheiro ...',
           held: 'Em espera'
@@ -114,7 +114,7 @@ Polymer.CasperI18nBehavior = {
   i18nUpdateUpload: function (vaadinUpload) {
     var i18n_behavior = Polymer.CasperI18nBehavior;
 
-    var resources  = i18n_behavior.__upload_i18n[i18n_behavior.__locale] 
+    var resources  = i18n_behavior.__upload_i18n[i18n_behavior.__locale]
                   || i18n_behavior.__upload_i18n[i18n_behavior.__locale.substring(0,2)];
 
     if ( resources !== undefined ) {
@@ -130,7 +130,7 @@ Polymer.CasperI18nBehavior = {
                            || resources[i18n_behavior.__locale.substring(0,2)]
                            || resources['en']
                            || message;
-    
+
     } else {
       return message;
     }
