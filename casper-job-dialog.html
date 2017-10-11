@@ -360,16 +360,20 @@
         this.$._onSubmitClick = callback;
       },
 
+      getDate: function(){
+        var today = new Date();
+        var year = today.getFullYear();
+        var base_month = today.getMonth() + 1
+        var month = base_month.toString().length == 1 ? '0' + base_month : base_month;
+        var full_date = year + '-' + month;
+        return full_date;
+      },
+
       getFilename: function(i18n_key, translation_parameters){
         i18n_key = 'i18n_filename_' + i18n_key;
 
         if(translation_parameters.date === undefined){
-          var today = new Date();
-          var year = today.getFullYear();
-          var base_month = today.getMonth() + 1
-          var month = base_month.toString().length == 1 ? '0' + base_month : base_month;
-          var full_date = year + '-' + month;
-          Polymer.Base.extend(translation_parameters, {date: full_date})
+          Polymer.Base.extend(translation_parameters, {date: this.getDate()})
         }
 
         try {
