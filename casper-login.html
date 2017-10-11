@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../casper-common-ui/casper-socket2.html">
+<!--link rel="import" href="../iron-ajax/iron-ajax.html"-->
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../paper-button/paper-button.html">
@@ -37,7 +38,7 @@
         margin-top: 6px;
       }
     </style>
-    <iron-ajax id="xhr" url="[[url]]" method="POST" content-type="application/json" handle-as="json" on-response="signInResponse"></iron-ajax>
+    <casper-socket2 id="socket"></casper-socket2>
     <paper-dialog opened modal>
       <div id="panel">
         <paper-input id="email" label="email"></paper-input>
@@ -65,16 +66,46 @@
         }
       },  
 
+      attached: function () {
+        this.$.socket.client = this;
+        this.$.socket.connect();
+        // body...
+      },
+
+      detached: function (argument) {
+        // body...
+        this.$.socket.disconnect();
+      },
+
+      onSocketOpen: function (message) {
+        // The socket is opened
+      },
+
+      onCasperNotification: function (argument) {
+        // body...
+      },
+
+      onSocketClose: function (argument) {
+
+      },
+
       signIn: function () {
-        this._loginParams = { email: this.$.email.value, password: this.$.password.value };
-        this.$.xhr.body = JSON.stringify(this._loginParams);
-        this.$.xhr.generateRequest();
+        //this._loginParams = { email: this.$.email.value, password: btoa(this.$.password.value) };
+        //this.$.xhr.body = JSON.stringify(this._loginParams);
+        //this.$.xhr.generateRequest();
+        this.$.socket.submitJob(
+          { 
+            tube: 'toconline-login',
+            email: this.$.email.value, 
+            password: btoa(this.$.password.value)
+          }, 
+          this.signInResponse.bind(this));
       },
 
       signInResponse: function () {
-        var response = this.$.xhr.lastResponse;
-        window.localStorage.setItem('Casper-Session', response.casper_session);
-        window.location.href = response.impersonate_url;
+        //var response = this.$.xhr.lastResponse;
+        //window.localStorage.setItem('Casper-Session', response.casper_session);
+        //window.location.href = response.impersonate_url;
       }
     });
   </script>
