@@ -185,7 +185,7 @@
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
-                         accept="image/jpeg, image/png"
+                         accept="[[uploadMimeTypes]]"
                          target="[[uploadUrl]]"
                          max-files="1"
                          method="POST"
@@ -249,6 +249,10 @@
         progressCount: {
           type: Number,
           value: 1
+        },
+        uploadMimeTypes: {
+          type: String,
+          value: 'image/jpeg, image/png'
         }
       },
 
@@ -279,6 +283,8 @@
 
         this.$.submit.style.display = 'none';
         this.$.background.style.width = '100%';
+
+        this._showingError = false;
       },
 
       closeSelfSocket: function () {
@@ -311,12 +317,12 @@
         this._updateUI(response.status);
       },
 
-      submitJob: function (job) {
+      submitJob: function (job, options) {
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'flex';
         this.$.error_panel.style.display = 'none';
         this._submitedTube = job.tube;
-        this.socket.submitJob(job, this.submitJobResponse.bind(this));
+        this.socket.submitJob(job, this.submitJobResponse.bind(this), options);
       },
 
       submitJobResponse: function (response) {
@@ -386,8 +392,12 @@
         return translation_obj;
       },
 
+      setUploadMimeTypes: function(mimeTypes) {
+        this.uploadMimeTypes = mimeTypes;
+      },
+
       onSocketOpen: function (message) {
-        // empty 
+        // empty
       },
 
       onCasperNotification: function (notification) {
@@ -495,10 +505,13 @@
       },
 
       _showError: function (message) {
-        this.$.upload_panel.style.display = 'none';
-        this.$.status_panel.style.display = 'none';
-        this.$.error_panel.style.display = 'inline-flex';
-        this.$.error_message.textContent = this.i18n.apply(this, message);
+        if ( this._showingError === false ) {
+          this._showingError = true;
+          this.$.upload_panel.style.display = 'none';
+          this.$.status_panel.style.display = 'none';
+          this.$.error_panel.style.display = 'inline-flex';
+          this.$.error_message.textContent = this.i18n.apply(this, message);
+        }
         this.closeSelfSocket();
       },
 

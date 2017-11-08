@@ -175,10 +175,19 @@ websocket client for casper server
         return;
       },
 
-      submitJob: function (job, callback) {
+      submitJob: function (job, callback, options) {
         var request = { job: job, callback: callback };
+        var target = {target: 'job-queue', tube: job.tube};
+        if ( options ) {
+          if (options.ttr) {
+            target.ttr = options.ttr;
+          }
+          if (options.validity) {
+            target.validity = options.validity;
+          }
+        }
         this._registerRequest(request);
-        this._send(request.invokeId + ':PUT:' + JSON.stringify({target: 'job-queue', tube: job.tube})+':'+JSON.stringify(job));
+        this._send(request.invokeId + ':PUT:' + JSON.stringify(target)+':'+JSON.stringify(job));
       },
 
       subscribeJob: function (jobId, callback) {
