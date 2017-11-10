@@ -253,6 +253,9 @@
         uploadMimeTypes: {
           type: String,
           value: 'image/jpeg, image/png'
+        },
+        originalFileName: {
+          type: String
         }
       },
 
@@ -414,11 +417,12 @@
       },
 
       _uploadRequest: function (event) {
-          event.preventDefault();
-          event.detail.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-          filename = 'uploaded_file';
-          event.detail.xhr.setRequestHeader('Content-Disposition', 'form-data; name="'+event.detail.file.formDataName+'"; filename="'+filename+'";');
-          event.detail.xhr.send(event.detail.file);
+        event.preventDefault();
+        event.detail.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        this.originalFileName = event.detail.file.name;
+        filename = 'uploaded_file';
+        event.detail.xhr.setRequestHeader('Content-Disposition', 'form-data; name="'+event.detail.file.formDataName+'"; filename="'+filename+'";');
+        event.detail.xhr.send(event.detail.file);
       },
 
       _uploadSuccess: function (event) {
