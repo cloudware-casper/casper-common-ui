@@ -115,7 +115,9 @@ websocket client for casper server
        * Terminate connection to casper server
        */
       disconnect: function () {
-        this._socket.close();
+        if ( this._socket ) {
+          this._socket.close();
+        }
       },
 
       /**
