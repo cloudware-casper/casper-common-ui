@@ -500,6 +500,9 @@
             this._onUploadCompletedCallbackData = { link: notification.link };
             this._closeDialog();
             break;
+          case 'follow-up':
+            this.subscribeJob(notification.response.next_job_id);
+            break;
           case 'failed':
           case 'error':
             this._showError(notification.message);
