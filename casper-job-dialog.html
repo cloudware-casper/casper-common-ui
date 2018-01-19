@@ -119,14 +119,14 @@
         margin: 8px;
       }
 
-      #error_panel {
+      #error_panel, #completed_panel {
         display: flex;
         flex-direction: row;
         align-items: flex-start;
         max-width: 350px;
       }
 
-      .error_pad {
+      .error_pad, .completed_pad {
         width: 72px;
         height: 100%;
         margin-right: 12px;
@@ -138,7 +138,13 @@
         --iron-icon-width: 72px;
       }
 
-      .error_message {
+      .completed_icon {
+        fill: var(--primary-color);
+        --iron-icon-height: 72px;
+        --iron-icon-width: 72px;
+      }
+
+      .error_message, .completed_message {
         font-size: 16px;
         font-weight: 500;
         color: #444;
@@ -162,7 +168,7 @@
         width: 50%;
       }
 
-      #submit {
+      #submit, #close_button {
         background-color: var(--primary-color);
         width: 50%;
         text-align: center;
@@ -203,10 +209,20 @@
               <span id="error_message"></span>
             </div>
           </div>
+          <div id="completed_panel" class="page completed_panel">
+            <div class="completed_pad">
+              <iron-icon id="completed_icon" icon="info-outline" class="completed_icon"></iron-icon>
+            </div>
+            <div class="completed_message">
+              <h2>[[i18n('i18n_completed')]]</h2>
+              <span id="completed_message"></span>
+            </div>
+          </div>
         </div>
         <div id="button_container">
           <paper-button id="submit" on-tap="_submitData">{{i18n('i18n_submit')}}</paper-button>
           <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
+          <paper-button id="close_button" on-tap="_closeDialog">{{i18n('i18n_close')}}</paper-button>
         </div>
     </paper-dialog>
   </template>
@@ -284,11 +300,15 @@
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'none';
         this.$.error_panel.style.display = 'none';
+        this.$.completed_panel.style.display = 'none';
 
         this.$.submit.style.display = 'none';
+        this.$.close_button.style.display = 'none';
         this.$.background.style.width = '100%';
 
         this._showingError = false;
+        this._stashed = false;
+        this._stashedMessage = undefined;
       },
 
       closeSelfSocket: function () {
@@ -307,6 +327,7 @@
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'flex';
         this.$.error_panel.style.display = 'none';
+        this.$.completed_panel.style.display = 'none';
         this.jobId = jobId;
         this.socket.subscribeJob(this.jobId, this._setJobResponse.bind(this));
       },
@@ -325,6 +346,7 @@
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'flex';
         this.$.error_panel.style.display = 'none';
+        this.$.completed_panel.style.display = 'none';
         this._submitedTube = job.tube;
         this.socket.submitJob(job, this.submitJobResponse.bind(this), options);
       },
@@ -344,6 +366,7 @@
         this.$.upload_panel.style.display = 'flex';
         this.$.status_panel.style.display = 'none';
         this.$.error_panel.style.display = 'none';
+        this.$.completed_panel.style.display = 'none';
         this._onUploadCallback = onUploadCallback;
         this._onUploadCompletedCallback = onUploadCompletedCallback;
         this._onUploadCompletedCallbackData = undefined
@@ -365,6 +388,7 @@
 
       registerSubmit: function (callback) {
         this.$.submit.style.display = 'block';
+        this.$.close_button.style.display = 'none';
         this.$.background.style.width = '50%';
 
         this.$._onSubmitClick = callback;
@@ -460,7 +484,9 @@
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'flex';
         this.$.error_panel.style.display = 'none';
+        this.$.completed_panel.style.display = 'none';
         this.$.error_message.textContent = '';
+        this.$.completed_message.textContent = '';
         this.$.dialog.close();
       },
 
@@ -496,12 +522,25 @@
           case 'in-progress':
             break;
           case 'completed':
-            this._handlePublicLink(notification);
-            this._onUploadCompletedCallbackData = { link: notification.link };
-            this._closeDialog();
+            if (this._stashed) {
+              this._showCompleted(this._stashedMessage);
+            } else {
+              this._handlePublicLink(notification);
+              this._onUploadCompletedCallbackData = { link: notification.link };
+              this._closeDialog();
+            }
             break;
           case 'follow-up':
             this.subscribeJob(notification.response.next_job_id);
+
+            if (notification.response.stash !== undefined) {
+              this._stashed = notification.response.stash;
+              this._stashedMessage = this.i18n.apply(this, notification.message);
+              if (notification.response.stash_icon !== undefined) {
+                this.$.completed_icon.icon = notification.response.stash_icon;
+              }
+            }
+
             break;
           case 'failed':
           case 'error':
@@ -521,6 +560,18 @@
           this.$.error_message.textContent = this.i18n.apply(this, message);
         }
         this.closeSelfSocket();
+      },
+
+      _showCompleted: function (message) {
+        this.$.submit.style.display = 'none';
+        this.$.background.style.display = 'none';
+        this.$.close_button.style.display = 'block';
+        this.$.close_button.style.width = '100%';
+        this.$.upload_panel.style.display = 'none';
+        this.$.status_panel.style.display = 'none';
+        this.$.error_panel.style.display = 'none';
+        this.$.completed_panel.style.display = 'inline-flex';
+        this.$.completed_message.textContent = message;
       },
 
       _submitData: function (event) {
