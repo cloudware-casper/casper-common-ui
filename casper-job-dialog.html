@@ -571,7 +571,7 @@
         this.$.status_panel.style.display = 'none';
         this.$.error_panel.style.display = 'none';
         this.$.completed_panel.style.display = 'inline-flex';
-        this.$.completed_message.textContent = message;
+        this.$.completed_message.innerHTML = message;
       },
 
       _submitData: function (event) {
