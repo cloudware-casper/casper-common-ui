@@ -171,7 +171,7 @@ websocket client for casper server
             }
           }
         } catch (exception) {
-
+          console.log(exception);
         }
         // cleanup and rollbar??
         return;
@@ -204,6 +204,13 @@ websocket client for casper server
         var request = { tube: p[0], id: p[1], callback: callback };
         this._registerRequest(request);
         this._send(request.invokeId + ':CANCEL:' + JSON.stringify({ target: 'job-queue', tube: request.tube, id: request.id }));
+      },
+
+      updateUI: function (jobId, uiState, callback) {
+        var p = jobId.split(':');
+        var request = { tube: p[0], id: p[1], callback: callback };
+        this._registerRequest(request);
+        this._send(request.invokeId + ':PUT:' + JSON.stringify({ target: 'job-ui', tube: request.tube, id: request.id })+':'+JSON.stringify(uiState));
       },
 
       _registerRequest: function (request) {

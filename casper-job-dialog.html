@@ -104,6 +104,16 @@
         margin: 12px;
       }
 
+      .message {
+        height: 16px;
+        max-height: 16px;
+        text-overflow: ellipsis;
+      }
+
+      .hidden {
+        display: none;
+      }
+
       #upload {
         flex-grow: 2;
         border-width: 2px;
@@ -163,32 +173,29 @@
         display: flex;
       }
 
-      #background {
-        background-color: var(--primary-color);
-        width: 50%;
-      }
-
       #submit, #close_button {
         background-color: var(--primary-color);
-        width: 50%;
+        width: 100%;
         text-align: center;
       }
 
     </style>
 
     <casper-socket2 id="self_socket"></casper-socket2>
-    <paper-tooltip for="close">{{i18n('i18n_close_and_cancel')}}</paper-tooltip>
+    <paper-tooltip id="tooltip" for="close">[[tooltip]]</paper-tooltip>
     <paper-dialog id="dialog" opened modal>
         <div id="header">
-          <h2 id="title" class="header">{{i18n('i18n_print_job')}}</h2>
+          <h2 id="title" class="header"></h2>
           <iron-icon icon="close" id="close" class="close" on-tap="_closeDialog"></iron-icon>
         </div>
         <div id="pager">
           <div id="status_panel" class="page">
-            <template is="dom-repeat" items="{{progress}}">
-              <span>{{item.message}}</span>
-              <paper-progress indeterminate class="slow"></paper-progress>
-            </template>
+            <span class="message">[[i18n('i18n_waiting_on_queue')]]</span>
+            <paper-progress indeterminate class="slow"></paper-progress>
+            <span class="message"></span>
+            <paper-progress indeterminate class="slow hidden"></paper-progress>
+            <span class="message"></span>
+            <paper-progress indeterminate class="slow hidden"></paper-progress>
           </div>
           <div id="upload_panel" class="page">
             <vaadin-upload id="upload"
@@ -220,9 +227,8 @@
           </div>
         </div>
         <div id="button_container">
-          <paper-button id="submit" on-tap="_submitData">{{i18n('i18n_submit')}}</paper-button>
-          <paper-button id="background" on-tap="_closeDialog">{{i18n('i18n_cancel')}}</paper-button>
-          <paper-button id="close_button" on-tap="_closeDialog">{{i18n('i18n_close')}}</paper-button>
+          <paper-button id="submit" on-tap="_submitData">[[i18n('i18n_submit')]]</paper-button>
+          <paper-button id="close_button" on-tap="_closeDialog"></paper-button>
         </div>
     </paper-dialog>
   </template>
@@ -262,27 +268,23 @@
           type: String,
           value: 'html'
         },
-        /** Number of progress bars */
-        progressCount: {
-          type: Number,
-          value: 1
-        },
         uploadMimeTypes: {
           type: String,
           value: 'image/jpeg, image/png'
         },
         originalFileName: {
           type: String
-        }
+        },
+        cancelOnClose: {
+          type: Boolean,
+          observer: '_setUpcancelOnClose'
+        },
+        tooltip: String
       },
 
       behaviors: [
         Polymer.CasperI18nBehavior
       ],
-
-      ready: function () {
-        this.setProgressCount(this.progressCount, true);
-      },
 
       attached: function () {
         if ( this.socket === undefined ) {
@@ -303,9 +305,9 @@
         this.$.completed_panel.style.display = 'none';
 
         this.$.submit.style.display = 'none';
-        this.$.close_button.style.display = 'none';
-        this.$.background.style.width = '100%';
+        this.$.close_button.style.display = 'block';
 
+        this.cancelOnClose = true;
         this._showingError = false;
         this._stashed = false;
         this._stashedMessage = undefined;
@@ -323,23 +325,34 @@
         this.closeSelfSocket();
       },
 
+      _setUpcancelOnClose: function (value) {
+        console.log("*** cancel on close:" + value);
+        if (value === true) {
+          this.$.close_button.textContent = this.i18n('i18n_cancel'); 
+          this.tooltip = this.i18n('i18n_close_and_cancel');
+        } else {
+          this.$.close_button.textContent = this.i18n('i18n_continue'); 
+          this.tooltip = this.i18n('i18n_close_and_continue');          
+        }
+      },
+
       subscribeJob: function (jobId) {
         this.$.upload_panel.style.display = 'none';
         this.$.status_panel.style.display = 'flex';
         this.$.error_panel.style.display = 'none';
         this.$.completed_panel.style.display = 'none';
         this.jobId = jobId;
-        this.socket.subscribeJob(this.jobId, this._setJobResponse.bind(this));
+        this.socket.subscribeJob(this.jobId, this._subscribeResponse.bind(this));
       },
 
-      _setJobResponse: function (response) {
+      _subscribeResponse: function (response) {
         if ( response.status.status === 'failed' || response.status.status === 'error' ) {
           if ( ! response.status.message ) {
             response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];
           }
           this._reportError(response.status);
         }
-        this._updateUI(response.status);
+        this._loadUI(response);
       },
 
       submitJob: function (job, options) {
@@ -354,6 +367,7 @@
       submitJobResponse: function (response) {
         if ( response.success === true ) {
           this.jobId = this._submitedTube + ':' + response.id;
+          this.socket.updateUI(this.jobId, { title: this._title });
         } else {
           response.status = 'failed';
           response.message = [ 'i18n_submit_job_error$tube', { tube: this._submitedTube } ];
@@ -373,23 +387,13 @@
       },
 
       setTitle: function (i18n_key) {
+        this._title = i18n_key;
         this.$.title.textContent = this.i18n(i18n_key);
-      },
-
-      setProgressCount: function (count, forced) {
-        if ( count !== this.progressCount || forced) {
-          this.progressCount = count;
-          this.progress = null;
-          var pdata = Array.apply(null, { length: this.progressCount }).map(function() { return { message: '\xA0' }; });
-          pdata[0].message = this.i18n('i18n_waiting_on_queue');
-          this.progress = pdata;
-        }
       },
 
       registerSubmit: function (callback) {
         this.$.submit.style.display = 'block';
         this.$.close_button.style.display = 'none';
-        this.$.background.style.width = '50%';
 
         this.$._onSubmitClick = callback;
       },
@@ -430,9 +434,11 @@
 
       onCasperNotification: function (notification) {
         if ( notification.message ) {
-          var idx  = notification.index || 0;
-          this.progress[idx].message = this.i18n.apply(this, notification.message);
-          this.notifyPath('progress.'+idx+'.message');
+          var idx = notification.index || 0;
+          var msg = this.$$('#status_panel span:nth-of-type('+(idx+1)+')');
+          if ( msg !== null ) {
+            msg.textContent = this.i18n.apply(this, notification.message);
+          }
         }
         this._updateUI(notification);
       },
@@ -469,7 +475,7 @@
         if ( this.iframe ) {
           this.iframe.style.display = 'none';
         }
-        if ( this.jobId ) {
+        if ( this.jobId && this.cancelOnClose ) {
           this.socket.cancelJob(this.jobId, function() {
             this.closeSelfSocket();
           }.bind(this));
@@ -507,6 +513,48 @@
         }
       },
 
+      _loadUI: function (uiState) {
+        if ( uiState.ui ) {
+          if ( uiState.ui.title ) {
+            this._title = uiState.ui.title;
+            this.$.title.textContent = this.i18n.apply(this, [ this._title ]);
+          }
+        }
+
+        if ( uiState.status) {
+          switch (uiState.status.status) {
+          case 'error':
+          case 'cancelled':
+          case 'error':
+            this._showError(uiState.status.progress[0].message);
+            break;
+          case 'in-progress':
+            if ( uiState.status.progress ) {
+              for ( var idx = 0; idx < uiState.status.progress.length; idx++ ) {
+                var pbar = this.$$('#status_panel paper-progress:nth-of-type('+(idx+1)+')');
+                if ( pbar !== null ) {
+                  if ( uiState.status.progress[idx].value !== null ) {
+                    pbar.indeterminate = false;
+                    pbar.value = uiState.status.progress[idx].value;
+                  } else {
+                    pbar.indeterminate = true;
+                  }
+                  pbar.classList.remove('hidden');
+                }
+                var msg = this.$$('#status_panel span:nth-of-type('+(idx+1)+')');
+                if ( msg !== null && uiState.status.progress[idx].message !== null ) {
+                 msg.textContent = this.i18n.apply(this, uiState.status.progress[idx].message);
+                }
+              }
+            }
+            break;
+          default:
+            this._showError(['i18n_websocket_disconnected']);
+            break;
+          }
+        }
+      },
+
       _updateUI: function (notification) {
         if ( notification.progress !== undefined ) {
           var progress = parseFloat(notification.progress);
@@ -516,6 +564,7 @@
             var pbar = this.$$('paper-progress:nth-of-type('+idx+')');
             pbar.indeterminate = false;
             pbar.value = progress;
+            pbar.classList.remove('hidden');
           }
         }
         switch (notification.status) {
@@ -542,6 +591,7 @@
             }
 
             break;
+          case 'cancelled':
           case 'failed':
           case 'error':
             this._showError(notification.message);
@@ -564,7 +614,6 @@
 
       _showCompleted: function (message) {
         this.$.submit.style.display = 'none';
-        this.$.background.style.display = 'none';
         this.$.close_button.style.display = 'block';
         this.$.close_button.style.width = '100%';
         this.$.upload_panel.style.display = 'none';
