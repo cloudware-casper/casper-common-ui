@@ -275,9 +275,9 @@
         originalFileName: {
           type: String
         },
-        cancelOnClose: {
-          type: Boolean,
-          observer: '_setUpcancelOnClose'
+        closeAction: {
+          type: String,
+          observer: '_setUpCloseAction'
         },
         tooltip: String
       },
@@ -311,6 +311,7 @@
         this._showingError = false;
         this._stashed = false;
         this._stashedMessage = undefined;
+        this._cancelOnClose = true;
       },
 
       closeSelfSocket: function () {
@@ -325,15 +326,26 @@
         this.closeSelfSocket();
       },
 
-      _setUpcancelOnClose: function (value) {
+      _setUpCloseAction: function (value) {
         console.log("*** cancel on close:" + value);
-        if (value === true) {
-          this.$.close_button.textContent = this.i18n('i18n_cancel'); 
-          this.tooltip = this.i18n('i18n_close_and_cancel');
-        } else {
-          this.$.close_button.textContent = this.i18n('i18n_continue'); 
-          this.tooltip = this.i18n('i18n_close_and_continue');          
-        }
+        switch (value) {
+          case 'close':
+            this.$.close_button.textContent = this.i18n('i18n_close'); 
+            this.tooltip = this.i18n('i18n_close');
+            this._cancelOnClose = true;
+            break;
+          case 'cancel':
+          default:
+            this.$.close_button.textContent = this.i18n('i18n_cancel'); 
+            this.tooltip = this.i18n('i18n_close_and_cancel');
+            this._cancelOnClose = true;
+            break;
+          case 'continue':
+            this.$.close_button.textContent = this.i18n('i18n_continue'); 
+            this.tooltip = this.i18n('i18n_close_and_continue');
+            this._cancelOnClose = false;
+            break;
+          }
       },
 
       subscribeJob: function (jobId) {
@@ -475,7 +487,7 @@
         if ( this.iframe ) {
           this.iframe.style.display = 'none';
         }
-        if ( this.jobId && this.cancelOnClose ) {
+        if ( this.jobId && this._cancelOnClose ) {
           this.socket.cancelJob(this.jobId, function() {
             this.closeSelfSocket();
           }.bind(this));
