@@ -506,6 +506,7 @@
         this.$.completed_panel.style.display = 'none';
         this.$.error_message.textContent = '';
         this.$.completed_message.textContent = '';
+        window.parent.dispatchEvent(new CustomEvent("casper-job-dialog-close", { detail: { job_id: this.jobId } }));
         this.$.dialog.close();
       },
 
