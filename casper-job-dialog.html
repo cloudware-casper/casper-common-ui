@@ -539,7 +539,6 @@
           switch (uiState.status.status) {
           case 'error':
           case 'cancelled':
-          case 'error':
             this._showError(uiState.status.progress[0].message);
             break;
           case 'in-progress':
@@ -560,6 +559,14 @@
                  msg.textContent = this.i18n.apply(this, uiState.status.progress[idx].message);
                 }
               }
+            }
+            break;
+          case 'completed':
+            if (this._stashed) {
+              this._showCompleted(this._stashedMessage);
+            } else {
+              this._handlePublicLink(uiState.status);
+              this._closeDialog();
             }
             break;
           default:
@@ -589,7 +596,9 @@
               this._showCompleted(this._stashedMessage);
             } else {
               this._handlePublicLink(notification);
-              this._onUploadCompletedCallbackData = { link: notification.link };
+              if (notification.link) {
+                this._onUploadCompletedCallbackData = { link: notification.link };
+              }
               this._closeDialog();
             }
             break;
