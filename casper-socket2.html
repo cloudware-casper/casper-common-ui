@@ -120,6 +120,14 @@ websocket client for casper server
         }
       },
 
+
+      /**
+      * socket state
+      */
+      _socketState: function() {
+        return this._socket.readyState;
+      },
+
       /**
        * Send text message to casper server
        *
@@ -149,7 +157,7 @@ websocket client for casper server
             request = this._activeRequests[invokeId];
             if ( request !== undefined ) {
 
-              console.log('Got reply to ivk:'+invokeId);
+              // console.log('Got reply to ivk:'+invokeId);
               var jso = message.data.indexOf(':R:{');
               if ( jso === -1 ) {
                 jso = message.data.indexOf(':S:{');

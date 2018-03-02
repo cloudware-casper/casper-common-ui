@@ -33,6 +33,7 @@
 <link rel="import" href="../casper-common-ui/casper-socket2.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../vaadin-upload/vaadin-upload.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
 
 <!--
 `casper-login`
@@ -181,6 +182,7 @@
 
     </style>
 
+    <iron-ajax id="xhr" url="/job-dialog-logger" handle-as="text" method="POST" on-response="handleResponse"></iron-ajax>
     <casper-socket2 id="self_socket"></casper-socket2>
     <paper-tooltip id="tooltip" for="close">[[tooltip]]</paper-tooltip>
     <paper-dialog id="dialog" opened modal>
@@ -317,6 +319,9 @@
 
       closeSelfSocket: function () {
         if ( this._closeSocket ) {
+          if(this.socket._socketState() == 1){
+            this._dialogLogger('close socket');
+          }
           this.socket.disconnect();
         }
       },
@@ -328,21 +333,20 @@
       },
 
       _setUpCloseAction: function (value) {
-        console.log("*** cancel on close:" + value);
         switch (value) {
           case 'close':
-            this.$.close_button.textContent = this.i18n('i18n_close'); 
+            this.$.close_button.textContent = this.i18n('i18n_close');
             this.tooltip = this.i18n('i18n_close');
             this._cancelOnClose = true;
             break;
           case 'cancel':
           default:
-            this.$.close_button.textContent = this.i18n('i18n_cancel'); 
+            this.$.close_button.textContent = this.i18n('i18n_cancel');
             this.tooltip = this.i18n('i18n_close_and_cancel');
             this._cancelOnClose = true;
             break;
           case 'continue':
-            this.$.close_button.textContent = this.i18n('i18n_continue'); 
+            this.$.close_button.textContent = this.i18n('i18n_continue');
             this.tooltip = this.i18n('i18n_close_and_continue');
             this._cancelOnClose = false;
             break;
@@ -359,7 +363,7 @@
       },
 
       _subscribeResponse: function (response) {
-        if ( response.status.status === 'failed' || response.status.status === 'error' ) {
+        if ( response.status && (response.status.status === 'failed' || response.status.status === 'error') ) {
           if ( ! response.status.message ) {
             response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];
           }
@@ -520,10 +524,45 @@
 
           try {
             this.downloadIframe.src = notification.public_link;
+            this._dialogLogger('_handlePublicLink');
           } catch (exception) {
             this._reportError(exception);
           }
 
+        }
+      },
+
+      handleResponse: function (data) {
+      },
+
+      _dialogLogger: function(message, job_id, callback){
+
+        var devmode = false;
+
+        if(devmode){
+          console.group(message);
+          console.time();
+        }
+
+            var j_id = this.jobId || job_id;
+            var post_message = undefined;
+            try {
+              post_message = j_id + ' => ' + message;
+
+              this.$.xhr.body = post_message;
+              this.$.xhr.generateRequest();
+
+              if(callback != undefined){
+                callback();
+              }
+
+            } catch (e) {
+              post_message = j_id + ' => FAIL ' + message;
+            }
+
+        if(devmode){
+          console.timeEnd();
+          console.groupEnd();
         }
       },
 
