@@ -125,6 +125,9 @@ websocket client for casper server
       * socket state
       */
       _socketState: function() {
+        if (this._socket === undefined) {
+          return 3; // CLOSED
+        }
         return this._socket.readyState;
       },
 
