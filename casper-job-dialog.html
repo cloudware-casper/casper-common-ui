@@ -282,7 +282,10 @@
           value: 'close',
           observer: '_setUpCloseAction'
         },
-        tooltip: String
+        tooltip: String,
+        urn: {
+          type: String
+        }
       },
 
       behaviors: [
@@ -384,6 +387,13 @@
       submitJobResponse: function (response) {
         if ( response.success === true ) {
           this.jobId = this._submitedTube + ':' + response.id;
+
+          var submit_message = 'submitJob';
+          if(this.urn != undefined){
+            submit_message += ' => ' + this.urn;
+          }
+          this._dialogLogger(submit_message, this.jobId);
+
           this.socket.updateUI(this.jobId, { title: this._title });
         } else {
           response.status = 'failed';
@@ -512,6 +522,7 @@
         this.$.completed_message.textContent = '';
         window.parent.dispatchEvent(new CustomEvent("casper-job-dialog-close", { detail: { job_id: this.jobId } }));
         this.$.dialog.close();
+        this._dialogLogger('_closeDialog');
       },
 
       _handlePublicLink: function (notification) {
