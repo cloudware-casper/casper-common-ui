@@ -719,21 +719,21 @@
         if ( Rollbar !== undefined ) {
           if ( response instanceof Error ) {
 
-            var rollbar_extra = {jobId: this.jobId}
-
-            var d1 = new Date(this.timing.start_process).getTime();
-            var d2 = new Date(this.timing.end_process).getTime();
-            var time_diff = d2 - d1;
-            Object.assign(rollbar_extra, { timing: this.timing })
-            Object.assign(rollbar_extra, { urn: this.urn, submited_job: this.submited_job })
-
-            if(time_diff > 10000){
-              Object.assign(rollbar_extra, { level: "error" })
-              Rollbar.error('Casper, job-dialog: ' + response.message, response, rollbar_extra);
-            }else{
-              Object.assign(rollbar_extra, { level: "info" })
-              Rollbar.info('Casper, job-dialog: ' + response.message, response, rollbar_extra);
-            }
+            // var rollbar_extra = {jobId: this.jobId}
+            //
+            // var d1 = new Date(this.timing.start_process).getTime();
+            // var d2 = new Date(this.timing.end_process).getTime();
+            // var time_diff = d2 - d1;
+            // Object.assign(rollbar_extra, { timing: this.timing })
+            // Object.assign(rollbar_extra, { urn: this.urn, submited_job: this.submited_job })
+            //
+            // if(time_diff > 10000){
+            //   Object.assign(rollbar_extra, { level: "error" })
+            //   Rollbar.error('Casper, job-dialog: ' + response.message, response, rollbar_extra);
+            // }else{
+            //   Object.assign(rollbar_extra, { level: "info" })
+            //   Rollbar.info('Casper, job-dialog: ' + response.message, response, rollbar_extra);
+            // }
 
           } else if ( response.errors ) {
             Rollbar.error('Casper, internal: ' + JSON.stringify(response.errors));
