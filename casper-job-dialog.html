@@ -382,7 +382,7 @@
           // ... remove from control array ...
           this._cancelReplyTimeout('subscribe');
           // ... report to rollbar ...
-          this._reportToRollbar('warning', new Error('taking to long to receive job subscription response.'));
+          this._reportToRollbar('warning', 'Subscription Timming', new Error('taking to long to receive job subscription response.'));
         }.bind(this));
         this.socket.subscribeJob(this.jobId, this._subscribeResponse.bind(this));
       },
@@ -398,7 +398,7 @@
           if ( ! response.status.message ) {
             response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];
           }
-          this._reportToRollbar('error', response);
+          this._reportToRollbar('error', 'Subscription Error', response);
         }
         this._loadUI(response);
         this._monitorProgress(response);
@@ -416,7 +416,7 @@
           // ... remove from control array ...
           this._cancelReplyTimeout('submit');
           // ... report to rollbar ...
-          this._reportToRollbar('warning', new Error('taking to long to receive job submission response.'));
+          this._reportToRollbar('warning', 'Submit Timming', new Error('taking to long to receive job submission response.'));
         }.bind(this));
         this.socket.submitJob(job, this.submitJobResponse.bind(this), options);
       },
@@ -435,7 +435,7 @@
           response.message = [ 'i18n_submit_job_error$tube', { tube: this._submitedTube } ];
           response.job = this.submited_job;
           this._updateUI(response);
-          this._reportToRollbar('critical', response);
+          this._reportToRollbar('critical', 'Submit Error', response);
         }
         this._monitorProgress(response);
       },
@@ -534,7 +534,7 @@
               this._onUploadCallback = undefined;
             }
           } catch (exception) {
-            this._reportToRollbar('critical', exception);
+            this._reportToRollbar('critical', 'Upload Exception', exception);
           }
         }
       },
@@ -591,7 +591,7 @@
         if ( false === this._hasPublicLink ) {
           reportMessage = ('job cancelled by ' + cancelledBy + ' after ' + time_diff + 'ms (no public link)');
           if ( 'user' === cancelledBy && time_diff >= this._jobCancelledReportTimeout ) {
-            this._reportToRollbar('warning', new Error(reportMessage));
+            this._reportToRollbar('warning', 'Cancelled by user', new Error(reportMessage));
           }
         } else {
           reportMessage = 'job completed after ' + time_diff + 'ms'
@@ -614,7 +614,7 @@
             this.downloadIframe.src = notification.public_link;
             this._hasPublicLink = true;
           } catch (exception) {
-            this._reportToRollbar('critical', exception);
+            this._reportToRollbar('critical', 'Public Link Exception', exception);
           }
         }
       },
@@ -789,39 +789,35 @@
       },
 
       _reportError: function (response) {
-        this._reportToRollbar('error', response);
+        this._reportToRollbar('error', 'Generic Error', response);
       },
 
-      _reportToRollbar: function(level, object) {
-        var title = '';
-        if ( object instanceof Error ) {
-          title = '[CJB]{' + this.jobId + '} - ' + object.message;
-        } else if ( undefined !== object.errors || undefined !== object.success ) {
-          title = '[CJB]{' + this.jobId + '} - failed to process job';
-        } else{
-          title ='[CJB]{' + this.jobId + '} - unidentified error: [please review]';
-        }
-        this._dialogLogger('_reportToRollbar: ' + title);
+      _reportToRollbar: function(level, title, object) {
+        var innerTitle = 'CJD - ' + title;
+        // console.log(innerTitle);
+        this._dialogLogger('_reportToRollbar: ' + innerTitle);
         if ( Rollbar !== undefined ) {
-          if( object instanceof Error && (level === "debug" || level === "warning" || level === "info")){
-            object = object.message;
+          if( object instanceof Error && (level === "debug" || level === "warning" || level === "info") ){
+            object = { msg: object.message };
+          } else {
+            object = { obj: object };
           }
-
+          object.job = this.jobId;
           switch(level) {
             case "debug":
-              Rollbar.debug(title, object);
+              Rollbar.debug(innerTitle, object);
               break;
             case "info":
-              Rollbar.info(title, object);
+              Rollbar.info(innerTitle, object);
               break;
             case "warning":
-              Rollbar.warning(title, object);
+              Rollbar.warning(innerTitle, object);
               break;
             case "critical":
-              Rollbar.critical(title, object);
+              Rollbar.critical(innerTitle, object);
               break;
             case "error":
-              Rollbar.error(title, object);
+              Rollbar.error(innerTitle, object);
             default:
           }
 
@@ -856,7 +852,7 @@
                   msg += ', current value is ' +  this._jobMonitorObject.new + '%';
                 }
                 msg += ', last report was ' + elapsed + 'ms ago.';
-                this._reportToRollbar('warning', new Error(msg));
+                this._reportToRollbar('warning', 'Progress Monitoring', new Error(msg));
                 // console.log(new Date(), 'report to rollbar (' + object.reportCount + '):', msg);
               }
               object.reportCount += 1;
