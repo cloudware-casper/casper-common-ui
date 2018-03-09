@@ -326,10 +326,12 @@
         this._closingSocket = false;
         this._dialogOpenTimestamp = new Date().getTime();
         this._scheduledReplyTimeout = new Array();
-        this._jobCancelled         = false;
-        this._jobMonitorInterval   = 10000; // 10s
-        this._jobMonitorMaxReports = 3;
-        this._jobMonitorObject     = { new: undefined, old: undefined };
+        this._jobCancelled              = false;
+        this._jobCancelledReportTimeout = 10000; // 10s
+        this._jobMonitorInterval        = 10000; // 10s
+        this._jobMonitorMaxReports      = 5;
+        this._jobMonitorReplyTimeout    = 10000; // 10s
+        this._jobMonitorObject          = { new: undefined, old: undefined };
       },
 
       closeSelfSocket: function () {
@@ -376,7 +378,7 @@
         this.$.completed_panel.style.display = 'none';
         this.jobId = jobId;
         this._dialogLogger('subscribeJob');
-        this._setReplyTimeout('subscribe', 10000, function() {
+        this._setReplyTimeout('subscribe', this._jobMonitorReplyTimeout, function() {
           // ... remove from control array ...
           this._cancelReplyTimeout('subscribe');
           // ... report to rollbar ...
@@ -410,7 +412,7 @@
         this._submitedTube = job.tube;
         this.submited_job = job;
         this._dialogLogger('submitJob: ' + ( undefined !== job.name ? job.name : '' ), job.tube);
-        this._setReplyTimeout('submit', 10000, function() {
+        this._setReplyTimeout('submit', this._jobMonitorReplyTimeout, function() {
           // ... remove from control array ...
           this._cancelReplyTimeout('submit');
           // ... report to rollbar ...
@@ -588,7 +590,7 @@
         var reportMessage = "";
         if ( false === this._hasPublicLink ) {
           reportMessage = ('job cancelled by ' + cancelledBy + ' after ' + time_diff + 'ms (no public link)');
-          if ( 'user' === cancelledBy && time_diff >= 10000 ) {
+          if ( 'user' === cancelledBy && time_diff >= this._jobCancelledReportTimeout ) {
             this._reportToRollbar('warning', new Error(reportMessage));
           }
         } else {
