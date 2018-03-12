@@ -283,12 +283,13 @@
           observer: '_setUpCloseAction'
         },
         tooltip: String,
-        urn: {
-          type: String
-        },
         monitorProgress: {
           type: Boolean,
           value: false
+        },
+        jobInfo: {
+          type: Object,
+          value: { urn: '', reference: '', operation: ''}
         }
       },
 
@@ -802,7 +803,12 @@
           } else {
             object = { obj: object };
           }
-          object.job = this.jobId;
+
+          object.job       = this.jobId || this.jobInfo.operation || this.jobInfo.urn;
+          object.operation = this.jobInfo.operation;
+          object.reference = this.jobInfo.reference;
+          object.urn       = this.jobInfo.urn;
+
           switch(level) {
             case "debug":
               Rollbar.debug(innerTitle, object);
@@ -852,7 +858,7 @@
                   msg += ', current value is ' +  this._jobMonitorObject.new + '%';
                 }
                 msg += ', last report was ' + elapsed + 'ms ago.';
-                // this._reportToRollbar('warning', 'Progress Monitoring', new Error(msg));
+                this._reportToRollbar('warning', 'Progress Monitoring', new Error(msg));
                 // console.log(new Date(), 'report to rollbar (' + object.reportCount + '):', msg);
               }
               object.reportCount += 1;
@@ -889,7 +895,8 @@
         this._scheduledReplyTimeout.push(object);
       },
 
-      _cancelAllTimers () {
+      _cancelAllTimers: function () {
+        this._dialogLogger('_cancelAllTimers');
         this._cancelReplyTimeout('submit');
         this._cancelReplyTimeout('subscribe');
         this._cancelReplyTimeout('progress');
