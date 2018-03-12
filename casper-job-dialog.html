@@ -858,7 +858,7 @@
                   msg += ', current value is ' +  this._jobMonitorObject.new + '%';
                 }
                 msg += ', last report was ' + elapsed + 'ms ago.';
-                this._reportToRollbar('warning', 'Progress Monitoring', new Error(msg));
+                // this._reportToRollbar('warning', 'Progress Monitoring', new Error(msg));
                 // console.log(new Date(), 'report to rollbar (' + object.reportCount + '):', msg);
               }
               object.reportCount += 1;
