@@ -109,6 +109,9 @@
         height: 16px;
         max-height: 16px;
         text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        width: 377px;
       }
 
       .hidden {
@@ -192,7 +195,7 @@
         </div>
         <div id="pager">
           <div id="status_panel" class="page">
-            <span class="message">[[i18n('i18n_waiting_on_queue')]]</span>
+            <span class="message" alt="[[i18n('i18n_waiting_on_queue')]]" title="[[i18n('i18n_waiting_on_queue')]]">[[i18n('i18n_waiting_on_queue')]]</span>
             <paper-progress indeterminate class="slow"></paper-progress>
             <span class="message"></span>
             <paper-progress indeterminate class="slow hidden"></paper-progress>
