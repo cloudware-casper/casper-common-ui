@@ -592,7 +592,13 @@
         if ( false === this._hasPublicLink ) {
           reportMessage = ('job cancelled by ' + cancelledBy + ' after ' + time_diff + 'ms (no public link)');
           if ( 'user' === cancelledBy && time_diff >= this._jobCancelledReportTimeout ) {
-            this._reportToRollbar('warning', 'Cancelled by user', new Error(reportMessage));
+            switch (this.jobInfo.operation) {
+              case "print-epaper":
+              case "download-epaper":
+                this._reportToRollbar('warning', 'Cancelled by user', new Error(reportMessage));
+                break;
+              default:
+            }
           }
         } else {
           reportMessage = 'job completed after ' + time_diff + 'ms'
