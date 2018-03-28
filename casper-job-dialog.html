@@ -737,13 +737,22 @@
           case 'completed':
             // .. ensure all timer stop ...
             this._cancelAllTimers();
+            if (typeof this._onCompletedCallback === 'function') {
+              this._onCompletedCallback(notification);
+              this._onCompletedCallback = undefined;
+            }
+
             if (this._stashed) {
               this._showCompleted(this._stashedMessage);
             } else {
               this._handlePublicLink(notification);
+
               if (notification.link) {
                 this._onUploadCompletedCallbackData = { link: notification.link };
+              } else if (undefined !== this._onUploadCompletedCallback) {
+                this._onUploadCompletedCallbackData = notification;
               }
+
               this._closeDialog(
                 new CustomEvent("callback",{detail:{source:'_updateUI', message:'task completed'}})
               );
