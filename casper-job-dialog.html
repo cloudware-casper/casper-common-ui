@@ -773,7 +773,17 @@
           case 'cancelled':
           case 'failed':
           case 'error':
-            this._showError(notification.message);
+            if (typeof this._onErrorCallback === 'function') {
+              this._onErrorCallback(notification);
+              this._onErrorCallback = undefined;
+              this._onUploadCompletedCallback = undefined;
+              this._onUploadCompletedCallbackData = undefined;
+              this._closeDialog(
+                new CustomEvent("callback",{detail:{source:'_updateUI', message:'task with error'}})
+              );
+            } else {
+              this._showError(notification.message);
+            }
             break;
           default:
             break;
