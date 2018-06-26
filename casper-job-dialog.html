@@ -588,7 +588,7 @@
         this.$.completed_panel.style.display = 'none';
         this.$.error_message.textContent = '';
         this.$.completed_message.textContent = '';
-        window.parent.dispatchEvent(new CustomEvent('casper-job-dialog-close', { detail: { job_id: this.jobId } }));
+        window.parent.dispatchEvent(new CustomEvent('casper-job-dialog-close', { detail: { job_id: this.jobId, notification: this._notification } }));
         this.$.dialog.close();
         // report?
         var reportMessage = "";
@@ -717,6 +717,7 @@
       },
 
       _updateUI: function (notification) {
+        this._notification = notification;
         if ( notification.progress !== undefined ) {
           var progress = parseFloat(notification.progress);
 
