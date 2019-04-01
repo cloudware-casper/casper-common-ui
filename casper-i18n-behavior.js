@@ -126,11 +126,12 @@ Casper.I18n = (superClass) => {
         return localizedMessage;
       } else {
         try {
-          // console.time('i18n');
-          var translatedMessage = new IntlMessageFormat(localizedMessage, Casper.locale); // TODO cache??
-          var rv = translatedMessage.format(args);
-          // console.timeEnd('i18n');
-          return rv;
+          let translatedMessage = localizedMessage;
+          for (let [argument, argumentValue] of Object.entries(args)) {
+            translatedMessage = translatedMessage.replace(`{${argument}}`, argumentValue);
+          }
+
+          return translatedMessage;
         } catch (exception) {
           console.log(exception);
           return localizedMessage;
