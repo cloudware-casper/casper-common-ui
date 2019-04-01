@@ -22,7 +22,7 @@ import { mixinBehaviors } from '@polymer/polymer/lib/legacy/class.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { IronOverlayBehavior } from '@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 
-class CasperOverlay extends mixinBehaviors([IronOverlayBehavior], Element) {
+class CasperOverlay extends mixinBehaviors([IronOverlayBehavior], PolymerElement) {
 	static get is () {
     return 'casper-overlay';
   }
