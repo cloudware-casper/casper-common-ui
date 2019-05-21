@@ -248,6 +248,10 @@ export const Casper = {
       en: "Successfully imported",
       pt: "Importação finalizada com sucesso"
     },
+    i18n_errors_saft_import: {
+      en: "Imported with errors",
+      pt: "Importação finalizada com erros"
+    },
     i18n_upload_saft_accounting: {
       en: "Generating fiscal plan",
       pt: "A criar exercício fiscal"
