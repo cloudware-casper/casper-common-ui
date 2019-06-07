@@ -138,7 +138,7 @@ export const Casper = {
     },
     i18n_invalid_image: {
       en: 'Unable to read image, please check file format',
-      pt: 'Não foi possivel ler a imagem, por favor confirme o formato'
+      pt: 'Não foi possível ler a imagem, por favor confirme o formato'
     },
     i18n_unsupported_$format: {
       en: 'Image format {format} is not supported, please check file format',
@@ -319,6 +319,10 @@ export const Casper = {
     i18n_importing_general_ledger_entries$current$total: {
       en: "Importing transactions {current}/{total}",
       pt: "A importar lançamentos contabilísticos {current}/{total}"
+    },
+    i18n_importing_check_journals_numbering: {
+      en: "Checking journals numbering",
+      pt: "A validar a numeração dos diários com lançamentos"
     },
     i18n_updating_company_info: {
       en: "Updating company data",
