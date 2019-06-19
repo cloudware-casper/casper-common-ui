@@ -824,6 +824,14 @@ export const Casper = {
     i18n_success_model_3_generation: {
       en: 'Model 3 generation completed successfully',
       pt: 'Modelo 3 gerado com sucesso'
+    },
+    i18n_module_ga: {
+      en: 'Gestão Administrativa',
+      pt: 'Gestão Administrativa'
+    },
+    i18n_module_gc: {
+      en: 'Gestão Comercial',
+      pt: 'Gestão Comercial'
     }
   },
   uploadI18n: {
