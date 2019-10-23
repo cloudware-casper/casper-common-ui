@@ -821,6 +821,14 @@ export const Casper = {
       en: 'Suporte Cloudware',
       pt: 'Suporte Cloudware'
     },
+    i18n_roles_mask_131072: {
+      en: 'Gestão de Senhas',
+      pt: 'Gestão de Senhas'
+    },
+    i18n_roles_mask_536870912: {
+      en: 'BETA',
+      pt: 'BETA'
+    },
     i18n_success_model_3_generation: {
       en: 'Model 3 generation completed successfully',
       pt: 'Modelo 3 gerado com sucesso'
