@@ -186,7 +186,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
         }
       </style>
 
-      <iron-ajax id="xhr" url="/job-dialog-logger" handle-as="text" method="POST" on-response="handleResponse"></iron-ajax>
       <casper-socket2 id="self_socket"></casper-socket2>
       <paper-tooltip id="tooltip" for="close">[[tooltip]]</paper-tooltip>
       <paper-dialog id="dialog" opened modal>
@@ -337,7 +336,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
   closeSelfSocket () {
     if ( this._closeSocket ) {
       if( 1 === this.socket._socketState() ){
-        this._dialogLogger('closeSelfSocket');
       }
       this._closingSocket = true;
       this.socket.disconnect();
@@ -377,7 +375,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
     this.$.error_panel.style.display = 'none';
     this.$.completed_panel.style.display = 'none';
     this.jobId = jobId;
-    this._dialogLogger('subscribeJob');
     this._setReplyTimeout('subscribe', this._jobMonitorReplyTimeout, function() {
       // ... remove from control array ...
       this._cancelReplyTimeout('subscribe');
@@ -393,7 +390,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
     }
     this._cancelReplyTimeout('subscribe');
     var hasStatus = ( undefined !== response.status && undefined !== response.status.status );
-    this._dialogLogger('_subscribeResponse: ' + ( hasStatus ? response.status.status : 'status NOT set!') );
     if ( true === hasStatus && (response.status.status === 'failed' || response.status.status === 'error') ) {
       if ( ! response.status.message ) {
         response.status.message = [ 'i18n_submit_job_error$tube', { tube: this.jobId.split(':')[0] } ];
@@ -411,7 +407,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
     this.$.completed_panel.style.display = 'none';
     this._submitedTube = job.tube;
     this.submited_job = job;
-    this._dialogLogger('submitJob: ' + ( undefined !== job.name ? job.name : '' ), job.tube);
     this._setReplyTimeout('submit', this._jobMonitorReplyTimeout, function() {
       // ... remove from control array ...
       this._cancelReplyTimeout('submit');
@@ -426,7 +421,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
       return;
     }
     this._cancelReplyTimeout('submit');
-    this._dialogLogger('submitJobResponse: success ' + response.success, ( this._submitedTube + ':' + response.id ));
     if ( response.success === true ) {
       this.jobId = this._submitedTube + ':' + response.id;
       this.socket.updateUI(this.jobId, { title: this._title });
@@ -561,7 +555,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
       message = ('_closeDialog: by undefined event, was alive for ' + time_diff + 'ms');
       cancelledBy = 'undefined event';
     }
-    this._dialogLogger(message);
     if ( this.iframe ) {
       this.iframe.style.display = 'none';
     }
@@ -602,14 +595,12 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
     } else {
       reportMessage = 'job completed after ' + time_diff + 'ms'
     }
-    this._dialogLogger('_closeDialog: ' + reportMessage);
   }
 
   _handlePublicLink (notification) {
     if ( true === this._jobCancelled ) {
       return;
     }
-    this._dialogLogger('_handlePublicLink: ' + ( undefined !== notification.status ? notification.status : 'status not set!' ));
     if ( notification.public_link !== undefined && notification.status !== 'error' ) {
 
       try {
@@ -618,40 +609,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
       } catch (exception) {
         this._reportToRollbar('critical', 'Public Link Exception', exception);
       }
-    }
-  }
-
-  handleResponse (data) {
-  }
-
-  _dialogLogger (message, job_id, callback){
-
-    var devmode = false;
-
-    if(devmode){
-      console.group(message);
-      console.time();
-    }
-
-        var j_id = this.jobId || job_id;
-        var post_message = undefined;
-        try {
-          post_message = j_id + ' => ' + message;
-
-          this.$.xhr.body = post_message;
-          this.$.xhr.generateRequest();
-
-          if(callback != undefined){
-            callback();
-          }
-
-        } catch (e) {
-          post_message = j_id + ' => FAIL ' + message;
-        }
-
-    if(devmode){
-      console.timeEnd();
-      console.groupEnd();
     }
   }
 
@@ -791,7 +748,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
       this.$.error_panel.style.display = 'inline-flex';
       this.$.error_message.textContent = this.i18n.apply(this, message);
     }
-    this._dialogLogger('_showError: ' + message);
     this.closeSelfSocket();
   }
 
@@ -817,7 +773,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
   _reportToRollbar (level, title, object) {
     var innerTitle = 'CJD - ' + title;
     // console.log(innerTitle);
-    this._dialogLogger('_reportToRollbar: ' + innerTitle);
     if ( Rollbar !== undefined ) {
       if( object instanceof Error && (level === "debug" || level === "warning" || level === "info") ){
         object = { msg: object.message };
@@ -917,7 +872,6 @@ class CasperJobDialog extends Casper.I18n(PolymerElement) {
   }
 
   _cancelAllTimers () {
-    this._dialogLogger('_cancelAllTimers');
     this._cancelReplyTimeout('submit');
     this._cancelReplyTimeout('subscribe');
     this._cancelReplyTimeout('progress');
