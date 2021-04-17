@@ -840,6 +840,14 @@ export const Casper = {
     i18n_module_gc: {
       en: 'Gestão Comercial',
       pt: 'Gestão Comercial'
+    },
+    i18n_progress: {
+      en: 'In Progress',
+      pt: 'Em Progresso'
+    },
+    i18n_commit_document: {
+      en: 'Finalizing document',
+      pt: 'A finalizar documento'
     }
   },
   uploadI18n: {
