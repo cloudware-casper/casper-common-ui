@@ -156,6 +156,10 @@ export const Casper = {
       en: "Document {document}, page {page}",
       pt: "Documento {document}, página {page}"
     },
+    i18n_printing_$document: {
+      en: "Document {document}",
+      pt: "Documento {document}"
+    },
     i18n_loading_$document: {
       en: "Loading document {document}",
       pt: "A obter documento {document}"
