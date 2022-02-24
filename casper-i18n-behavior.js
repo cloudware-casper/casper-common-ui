@@ -641,6 +641,10 @@ export const Casper = {
       en: "Deleting receipt {current}/{total}",
       pt: "A eliminar recibo {current}/{total}"
     },
+    i18n_deleting_payments$current$total: {
+      en: "Deleting receipt {current}/{total}",
+      pt: "A eliminar recibo {current}/{total}"
+    },
     i18n_deleting_documents$current$total: {
       en: "Deleting document {current}/{total}",
       pt: "A eliminar documento {current}/{total}"
