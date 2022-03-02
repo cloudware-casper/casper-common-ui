@@ -18,6 +18,12 @@
   -
  */
 
+/*
+  i18n_in_progress
+  i18n_completed
+  i18n_error
+*/
+
 import IntlMessageFormat from 'intl-messageformat/src/main.js';
 
 export const Casper = {
@@ -304,7 +310,7 @@ export const Casper = {
       en: "SAF-T file has validation errors",
       pt: "Foram encontrados erros de validação no SAF-T"
     },
-    i18n_importing_initialize_counters: {
+    i18n_importing_initialize_counters: {
       en: "Counting elements to import",
       pt: "A contabilizar dados a importar"
     },
@@ -316,7 +322,7 @@ export const Casper = {
       en: "Expanding fiscal year plan",
       pt: "A expandir plano de contas"
     },
-    i18n_importing_general_ledger$current$total: {
+    i18n_importing_general_ledger$current$total: {
       en: "Importing accounts {current}/{total}",
       pt: "A importar contas do plano {current}/{total}"
     },
@@ -717,7 +723,7 @@ export const Casper = {
       en: 'Submitted model 3 file is invalid',
       pt: 'O ficheiro do modelo 3 submetido é inválido'
     },
-    i18n_model3_belongs_to_other_company: {
+    i18n_model3_belongs_to_other_company: {
       en: 'Submitted model 3 file belongs to other company',
       pt: 'O ficheiro do modelo 3 submetido pertence a outra empresa'
     },

@@ -4,35 +4,9 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
-  "resolutions": {
-    "inherits": "2.0.3",
-    "samsam": "1.1.3",
-    "supports-color": "3.1.2",
-    "type-detect": "1.0.0"
-  },
-  "main": "casper-login.js",
   "dependencies": {
-    "@polymer/app-localize-behavior": "^3.x",
-    "@polymer/iron-dropdown": "^3.x",
-    "@polymer/iron-icon": "^3.x",
-    "@polymer/iron-icons": "^3.x",
-    "@polymer/paper-button": "^3.x",
-    "@polymer/paper-checkbox": "^3.x",
-    "@polymer/paper-dialog": "^3.x",
-    "@polymer/paper-input": "^3.x",
-    "@polymer/paper-progress": "^3.x",
-    "@polymer/paper-radio-button": "^3.x",
-    "@polymer/paper-radio-group": "^3.x",
-    "@polymer/paper-styles": "^3.x",
-    "@polymer/paper-tooltip": "^3.x",
     "@polymer/polymer": "^3.x",
-    "@vaadin/vaadin-upload": "^4.x",
+    "@polymer/iron-overlay-behavior": "^3.x",
     "intl-messageformat": "^2.x"
-  },
-  "devDependencies": {
-    "@polymer/iron-component-page": "^4.0.0",
-    "@polymer/iron-demo-helpers": "^3.0.0",
-    "@webcomponents/webcomponentsjs": "^2.0.0",
-    "wct-browser-legacy": "^1.0.1"
   }
 }
