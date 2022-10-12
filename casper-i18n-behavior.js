@@ -29,6 +29,10 @@ import IntlMessageFormat from 'intl-messageformat/src/main.js';
 export const Casper = {
   locale: window.localStorage.getItem('Casper-Locale') || 'pt',
   i18nData:  {
+    i18n_in_progress: {
+      en: 'In progress',
+      pt: 'Em progresso'
+    },
     i18n_print_job: {
       en: 'Print job',
       pt: 'Tarefa impressão'
